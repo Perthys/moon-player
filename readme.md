@@ -3,6 +3,8 @@
 MoonPlayer is an experimental Moon Animator save player
 Due to its experimental state expect bugs
 
+Credit to [MaximumADHD/Moonlite](https://github.com/MaximumADHD/Moonlite) for interpolator + joint hierarchy resolver
+
 ## Features
 
 - Compiles MoonSave into compressed binary format
@@ -49,12 +51,15 @@ Main methods:
 - `Play()` rewinds the track, restores default values, and starts playback.
 - `Stop()` stops playback and restores defaults.
 - `Resume()` continues playback without rewinding.
-- `RegisterMarker(name, callback)` runs `callback(targetInstance, isFinishedMarker)` when a named marker is reached.
 - `OnFinished(callback)` runs the callback when the track ends.
+- `OnMarkerReached(name, callback)` runs `callback(targetInstance, isFinishedMarker)` when a named marker is reached.
+- `OnFrameReached(frame, callback)` runs `callback()` when a target frame has been reached
 
 ## Compiling a Track
 
 The compilation process should only be done once in studio before publishing to avoid having to store the entire MoonSave in game
+
+- use `Serializer.new(moonSave, compressionLevel?)` + `serializer:build()` to compile a MoonSave
 
 ```lua
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
