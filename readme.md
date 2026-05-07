@@ -35,12 +35,16 @@ local player = MoonPlayer.Player.new(track, {
 	["Workspace.Dummy"] = workspace.Dummy,
 })
 
-player:RegisterMarker("Footstep", function(target, isFinished)
+player:OnMarkerReached("Footstep", function(target, isFinished)
 	print("marker", target, isFinished)
 end)
 
 player:OnFinished(function()
 	print("finished")
+end)
+
+player:OnFrameReached(100, function()
+	print("frame 100 reached")
 end)
 
 player:Play()
