@@ -1,0 +1,16 @@
+{
+    "name": "MoonPlayer",
+
+    "tree": {
+        "$className": "DataModel",
+
+        "ReplicatedStorage": {
+            "$className": "ReplicatedStorage",
+            "$ignoreUnknownInstances": true,
+
+            "MoonPlayer": {
+                "$path": "MoonPlayer"
+            }
+        }
+    }
+}
