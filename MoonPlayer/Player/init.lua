@@ -239,8 +239,6 @@ local function update(delta)
 					or instances[instanceId]
 
 				if realInstance then
-					local isModel = realInstance.ClassName == "Model"
-					
 					for name, value in props do
 						ApplyProp(realInstance, name, value, track)
 					end
