@@ -19,7 +19,7 @@ function Serializer.new(
 	local self = setmetatable({
 		save = save,
 		data = HttpService:JSONDecode(save.Value),
-		flags = flags or Flags + {},
+		flags = flags and Flags.Default + flags or Flags.Default,
 		
 		tree = Tree:Clone(),
 		realValues = {},

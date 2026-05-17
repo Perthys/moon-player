@@ -16,14 +16,14 @@ export type Flags = {
 
 
 local function CreateCallFlag(key, default)
-    return setmetatable({
-        [key] = default
-    }, {
-        __call = function(self, value)
-            self[key] = value
-            return self
-        end
-    })
+	local self = {
+		[key] = default
+	}
+	
+	return function(value)
+		self[key] = value
+		return self
+	end
 end
 
 local function CreateOptionFlag(key, default, options)
@@ -84,19 +84,23 @@ local Default = {
 
 local Flags: Flags = setmetatable({}, { 
     __index = function(self, key) 
-        local existingFlag = _Flags[key]
+		local existingFlag = _Flags[key]
+		if typeof(existingFlag) == "function" then
+			return existingFlag
+		end
+		
         local meta = getmetatable(existingFlag) or {}
   
         local call = meta.__call
         local index = meta.__index
 
         return setmetatable(
-            table.clone(Default), 
+            table.clone(existingFlag or Default), 
             {
                 __call = call,
                 __index = index,
 
-                __add = function(flags, newFlag)
+				__add = function(flags, newFlag)
                     for key, value in newFlag do
                         flags[key] = value
                     end
