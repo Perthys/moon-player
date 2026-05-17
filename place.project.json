@@ -4,20 +4,12 @@
     "tree": {
         "$className": "DataModel",
 
-        "StarterPlayer": {
-            "$className": "StarterPlayer",
+        "ReplicatedStorage": {
+            "$className": "ReplicatedStorage",
             "$ignoreUnknownInstances": true,
 
-            "StarterPlayerScripts": {
-                "$className": "StarterPlayerScripts",
-
-                "Library": {
-                    "$className": "Folder",
-
-                    "MoonPlayer": {
-                        "$path": "MoonPlayer"
-                    }
-                }
+            "MoonPlayer": {
+                "$path": "MoonPlayer"
             }
         }
     }
