@@ -9,10 +9,6 @@ local PropertyType = Enums.PropertyType
 
 local MARKER_TYPES = { "finish", "start" } -- do not reorder these
 
-local function unpackf16(u: number, min: number, max: number): number
-    return u / 65535 * (max - min) + min
-end
-
 
 local Deserializer = {}
 
