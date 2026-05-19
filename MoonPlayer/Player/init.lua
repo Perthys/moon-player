@@ -315,7 +315,7 @@ local function framePregen(delta)
 end
 
 RunService:BindToRenderStep("UPDATE_MOON", Enum.RenderPriority.Camera.Value, update)
-RunService:BindToSimulation(framePregen, FRAME_ADVANCE_HZ, Enum.RenderPriority.Camera.Value + 2)
+RunService:BindToSimulation(framePregen, FRAME_ADVANCE_HZ, Enum.RenderPriority.Last.Value + 2)
 
 
 return Player

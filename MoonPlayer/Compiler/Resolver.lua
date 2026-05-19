@@ -1,5 +1,16 @@
 -- stolen from moonlite
-
+local function fastResolvePath(path: MoonAnimPath, root)
+	local tbl = {}
+	
+	for i = 2, #path.InstanceNames do
+		local class = path.InstanceTypes[i]
+		local name  = path.InstanceNames[i]
+		
+		table.insert(tbl, `{class}[Name = "{name}"]`)
+	end
+	
+	return root:QueryDescendants(table.concat(tbl, " > "))[1]
+end
 
 local function toPath(path: MoonAnimPath): string
 	return table.concat(path.InstanceNames, ".")
@@ -71,6 +82,11 @@ local function _getServiceSmart(name: string): Instance?
 end
 
 local function resolveAnimPath(path: MoonAnimPath?, root: Instance?): Instance?
+	local fastResolve = fastResolvePath(path, root or game)
+	if fastResolve then
+		return fastResolve
+	end
+	
 	if not path then
 		return nil
 	end
