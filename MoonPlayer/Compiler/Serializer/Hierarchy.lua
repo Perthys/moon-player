@@ -170,6 +170,10 @@ local function ParseHierarchy(data, save)
 						
 						if isMotor6D then
 							keyframe.value = keyframe.value:Inverse() * default
+
+							if keyframe.ease then
+								keyframe.ease.target = keyframe.ease.target:Inverse() * default
+							end
 						end
 						
 						frameData[tostring(jointId)] = {
