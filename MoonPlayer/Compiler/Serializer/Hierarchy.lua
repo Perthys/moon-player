@@ -29,14 +29,21 @@ local function parseKeyframes(keyframes, instance)
 			local frame = values[tostring(i)]
 			local frameTime = startTime + i
 			local lastFrame = frames[#frames]
-
+			local value = frame.Value
+			
 			local isStatic = StaticProps[instance.ClassName]
 				and StaticProps[instance.ClassName][keyframes.Name]
 			
 			local diff = frameTime - (lastFrame and lastFrame.startTime or frameTime)
 			if diff > 1 and (lastFrame and not lastFrame.static) and not isStatic then
 				lastFrame.count = diff
+
+				if lastFrame.ease then
+					lastFrame.ease.target = value
+				end
 			end
+
+			local easeData
 
 			if eases then
 				local ease = eases:FindFirstChild(tostring(i))
@@ -53,21 +60,20 @@ local function parseKeyframes(keyframes, instance)
 						end
 					end
 
-					if lastFrame then
-						lastFrame.ease = {
-							type = easeType.Value,
-							params = params,
-							target = frame.Value
-						}
-					end	
+					easeData = {
+						type = easeType.Value,
+						params = params,
+						target = value
+					}
 				end
 			end
 
 			table.insert(frames, {
 				startTime = frameTime,
-				value = frame.Value,
+				value =  value,
 				static = isStatic,
-				count = 1
+				count = 1,
+				ease = easeData,
 			})
 		end
 	end
@@ -161,7 +167,7 @@ local function ParseHierarchy(data, save)
 					end
 					
 					local isMotor6D = jointData.Joint:IsA("Motor6D")
-					for _, keyframe in parseKeyframes(keyframes, realInstance) do
+					for _, keyframe in parseKeyframes(keyframes, realInstance, isMotor6D) do
 						local frameData = frameBuffer[tostring(keyframe.startTime)]
 						if not frameData then
 							frameData = {}

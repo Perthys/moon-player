@@ -183,6 +183,7 @@ function Player:_advance()
 
 					local progress = (valueData.originalDuration - valueData.duration)
 					local delta = easeFunc(progress / valueData.originalDuration)
+
 					local interpolate = Interpolator.get(ease.target)
 
 					instanceEntry[name] = interpolate(prop.value, ease.target, delta)
@@ -256,7 +257,6 @@ local function update(delta)
 		end
 
 		local frameId = tostring(currentFrame)
-
 		local frame = track.FrameAdvance[frameId]
 
 		local frameCallback = track.FrameCallbacks[frameId]

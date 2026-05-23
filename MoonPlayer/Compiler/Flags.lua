@@ -1,3 +1,5 @@
+--!strict
+
 export type Flag = {
     [string]: any
 }
