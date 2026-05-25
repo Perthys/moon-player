@@ -2,6 +2,13 @@ local Resolver = require("../Resolver")
 local StaticProps = require("../../StaticProps")
 local EQ = require("@self/EQ")
 
+local CONSTANT_INTERPS = {
+	["Instance"] = true,
+	["boolean"] = true,
+	["string"] = true,
+	["nil"] = true,
+}
+
 local VALUE_HANDLERS = {
 	EnumType = function(inst, baseValue)
 		return Enum[inst.Value][baseValue]
@@ -41,45 +48,33 @@ local function readValue(value)
 	return baseValue
 end
 
-local function parseKeyframes(keyframes, instance)
-	local packs = keyframes:QueryDescendants(">Folder")
-	local idx = {}
+local function parseKeyframes(keyframesInst, instance, duration)
+	local packs = keyframesInst:QueryDescendants(">Folder")
+
+	local packInstances = {}
+	local keyframes = {}
 	
+	local isStatic = StaticProps[instance.ClassName]
+		and StaticProps[instance.ClassName][keyframesInst.Name]
+
 	for _, inst in packs do
-		table.insert(idx, tonumber(inst.Name))
-	end
-	
-	table.sort(idx)
-	
-	local frames = {}
+		local packId = tonumber(inst.Name)
+		packInstances[packId] = inst 
 
-	for _, startTime in idx do
-		local pack = keyframes[tostring(startTime)]
-		local values = pack:FindFirstChild("Values")
-		local eases = pack:FindFirstChild("Eases")
-		
-		local sortedPack = {}
-		for _, value in values:GetChildren() do
-			table.insert(sortedPack, tonumber(value.Name))
-		end
-		
-		table.sort(sortedPack)
-		
-        local easeFinished = false
+		local values = assert(
+			inst:FindFirstChild("Values"), 
+			"keyframe pack has no values"
+		)
 
-		for _, i in sortedPack do
-			local frame = values[tostring(i)]
-			local frameTime = startTime + i
-			local lastFrame = frames[#frames]
-			local value = readValue(frame)
-			
-			local isStatic = StaticProps[instance.ClassName]
-				and StaticProps[instance.ClassName][keyframes.Name]
-			
+		local eases = inst:FindFirstChild("Eases")
+
+		for _, keyframe in values:GetChildren() do
+			local frameIdx =  tonumber(keyframe.Name)
+
 			local easeData
 
-			if eases then
-				local ease = eases:FindFirstChild(tostring(i))
+			if eases then 
+				local ease = eases:FindFirstChild(keyframe.Name)
 
 				if ease then
 					local easeType = ease:FindFirstChild("Type")
@@ -95,38 +90,95 @@ local function parseKeyframes(keyframes, instance)
 
 					easeData = {
 						type = easeType.Value,
-						params = params,
-						target = value
+						params = params
 					}
 				end
-			end
+			end 
 
-            local diff = frameTime - (lastFrame and lastFrame.startTime or frameTime)
+			local value = readValue(keyframe)
 
-            if lastFrame and lastFrame.ease and diff > 1 then
-                lastFrame.count += diff
-                lastFrame.ease.target = value
+			table.insert(keyframes, {
+				pack = packId,
+				idx = frameIdx,
+				startFrame = frameIdx + packId,
 
-                easeFinished = true
-                continue
-            end
-			
-            if lastFrame and not lastFrame.static and not isStatic and diff > 1 and not easeFinished and EQ(value, lastFrame.value) then
-                lastFrame.count += diff
-                continue
-            end
-			
-			easeFinished = false
-			table.insert(frames, {
-				startTime = frameTime,
-				value =  value,
-				static = isStatic,
-				count = 1,
-				ease = easeData,
+				static = isStatic or CONSTANT_INTERPS[typeof(value)],
+				eases = easeData,
+				value = value,
+				count = 1
 			})
-		end
+		end 
 	end
 	
+	table.sort(keyframes, function(a, b)
+		return a.pack + a.idx < b.pack + b.idx
+	end)
+
+	local frames = {}
+
+	while true do 
+		local currentFrame = table.remove(keyframes, 1)
+		if not currentFrame then
+			break
+		end 
+
+		while true and not currentFrame.static do
+			local nextFrame = keyframes[1]
+			if not nextFrame then
+				break
+			end
+
+			local diff = nextFrame.startFrame - currentFrame.startFrame
+			local isValueSame = EQ(nextFrame.value, currentFrame.value)
+
+
+			if diff >= 1 and currentFrame.eases then
+				currentFrame.eases.target = nextFrame.value
+				currentFrame.count += diff - 1
+				
+				break
+			end
+
+			if diff > 1 and not currentFrame.eases and not isValueSame then
+				currentFrame.eases = {
+					target = nextFrame.value,
+					type = "Linear",
+					params = {
+						Direction = "In"
+					}
+				}
+
+				currentFrame.count += diff - 1
+				break
+			end
+
+		 	if diff >= 1 and isValueSame then
+				if nextFrame.eases then
+					currentFrame.count += diff - 1
+					break
+				end
+
+				currentFrame.count += diff
+				table.remove(keyframes, 1)
+				continue
+			end
+
+			break
+		end
+
+		if currentFrame.eases and (not currentFrame.eases.target or currentFrame.static) then
+			currentFrame.eases = nil
+		end 
+
+		table.insert(frames, {
+			startTime = currentFrame.startFrame,
+			value = currentFrame.value,
+			static = isStatic,
+			count = currentFrame.count,
+			ease = currentFrame.eases
+		})
+	end 
+
 	return frames
 end
 

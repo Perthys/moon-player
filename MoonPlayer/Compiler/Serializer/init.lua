@@ -106,6 +106,7 @@ function Serializer:writePropertyValueToStream(stream, value)
 			end
 		end
 	else 
+		print(debug.traceback())
 		warn("invalid type", valueType, value)
 	end
 end
