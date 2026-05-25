@@ -148,7 +148,7 @@ local function parseKeyframes(keyframesInst, instance, duration)
 					}
 				}
 
-				currentFrame.count += diff - 1
+				currentFrame.count += diff
 				break
 			end
 

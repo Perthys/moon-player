@@ -1,4 +1,4 @@
-local FRAME_ADVANCE_HZ = Enum.StepFrequency.Hz30
+local FRAME_ADVANCE_HZ = Enum.StepFrequency.Hz15
 
 
 local HttpService = game:GetService("HttpService")
@@ -313,27 +313,31 @@ local function update(delta)
 				end
 			end
 		end
-		
-		for inst, attach in track.PartAttachments do
-			inst.CFrame = attach.CFrame
-		end
 	
 		while true do
-			local marker = track.MarkerSequence[1]
+				local marker = track.MarkerSequence[1]
 
-			if typeof(marker) ~= "number" or currentFrame < marker then
-				break
+				if typeof(marker) ~= "number" or currentFrame < marker then
+					break
+				end
+
+				emitMarkers(track, tostring(marker))
+				table.remove(track.MarkerSequence, 1)
 			end
-
-			emitMarkers(track, tostring(marker))
-			table.remove(track.MarkerSequence, 1)
-		end
 		
 		track.FrameAdvance[tostring(lastFrame)] = nil
 		track.CurrentFrame = currentFrame
 		track.TimePosition += delta
 	end
 end
+
+local function updateAttachments()
+	for track in PlayingTracks do
+		for inst, attach in track.PartAttachments do
+			inst.CFrame = attach.CFrame
+		end
+	end
+end 
 
 local function framePregen(delta)
 	for track in PlayingTracks do
@@ -345,8 +349,9 @@ local function framePregen(delta)
 	end
 end
 
-RunService:BindToRenderStep("UPDATE_MOON", Enum.RenderPriority.Camera.Value + 1, update)
-RunService:BindToSimulation(framePregen, FRAME_ADVANCE_HZ, Enum.RenderPriority.Last.Value + 2)
+RunService:BindToRenderStep("UPDATE_MOON", Enum.RenderPriority.First.Value, update)
+RunService:BindToRenderStep("UPDATE_MOON_ATTACHMENTS", Enum.RenderPriority.Camera.Value - 1, updateAttachments)
+RunService:BindToSimulation(framePregen, FRAME_ADVANCE_HZ, Enum.RenderPriority.Last.Value)
 
 
 return Player
