@@ -205,7 +205,11 @@ function Serializer:fetchIdFromCompressionDictionary(target, value)
 end
 
 function Serializer:initHierarchy()
-	local hierarchy = ParseHierarchy(self.data, self.save)
+	local hierarchy = ParseHierarchy(
+		self.data, 
+		self.save, 
+		not self.flags.RuntimeLengthEncoding
+	)
 
 	self.frameBuffer = hierarchy.frameBuffer
 	self.targets = hierarchy.tree

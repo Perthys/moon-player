@@ -83,7 +83,7 @@ local function optimizeKeyframes(frames, isStatic)
 	return optimized
 end
 
-local function parseKeyframes(keyframesInst, instance, duration)
+local function parseKeyframes(keyframesInst, instance, disableOptimization)
 	local packs = keyframesInst:QueryDescendants(">Folder")
 
 	local packInstances = {}
@@ -231,7 +231,7 @@ local function parseKFMarkers(track)
 	return markers
 end
 
-local function ParseHierarchy(data, save)
+local function ParseHierarchy(data, save, disableOptimization)
 	local frameBuffer = {}
 	local defaults = {}
 	local tree = {}
@@ -285,7 +285,7 @@ local function ParseHierarchy(data, save)
 					end
 					
 					local isMotor6D = joint.Joint:IsA("Motor6D")
-					for _, keyframe in parseKeyframes(keyframes, joint.Joint) do
+					for _, keyframe in parseKeyframes(keyframes, joint.Joint, disableOptimization) do
 						local value = keyframe.value
 						local frameData = frameBuffer[tostring(keyframe.startTime)]
 						
@@ -339,7 +339,7 @@ local function ParseHierarchy(data, save)
 					instDefaults[child.Name] = readValue(default)
 				end
 				
-				for _, keyframe in parseKeyframes(child, realInstance) do
+				for _, keyframe in parseKeyframes(child, realInstance, disableOptimization) do
 					local frameData = frameBuffer[tostring(keyframe.startTime)]
 					if not frameData then
 						frameData = {}

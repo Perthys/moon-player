@@ -2,6 +2,7 @@ local FlagBase = require("./FlagBase")
 
 local Flags = {
     CompressionLevel = FlagBase.CreateCallFlag("CompressionLevel", 7),
+    DisableRuntimeLengthEncoding = { RuntimeLengthEncoding = false },
 
     CFrameSerializeMethod = FlagBase.CreateOptionFlag("CFrameSerializeMethod", "Bytes", { 
         Attributes = {
@@ -21,6 +22,7 @@ local Flags = {
 }
 
 local Default = {
+    RuntimeLengthEncoding = true,
     CompressionLevel = 7,
     CFrameSerializeMethod = "Bytes",
     CFrameRotSizeT = 4, 
