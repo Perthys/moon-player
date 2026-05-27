@@ -356,7 +356,7 @@ local function ParseHierarchy(data, save, disableOptimization)
 					
 					instDefaults[child.Name] = readValue(default)
 				end
-				
+
 				for _, keyframe in parseKeyframes(child, realInstance, disableOptimization) do
 					local frameData = frameBuffer[tostring(keyframe.startTime)]
 					if not frameData then

@@ -290,12 +290,12 @@ local function update(delta)
 	for track in PlayingTracks do
 		local currentFrame = math.floor(track.TimePosition * track.FrameRate)
 		local lastFrame = track.CurrentFrame
-		
+
 		delta = math.min(delta, 1 / track.OriginalFrameRate)
 
 		if currentFrame > track.Length then
 			for callback in track.FinishedCallbacks do
-				task.spawn(callback)
+				task.defer(callback)
 			end
 			
 			PlayingTracks[track] = nil
@@ -320,10 +320,12 @@ local function update(delta)
 					or instances[instanceId]
 
 				if realInstance then
+					local className = classNames[instanceId]
+
 					for name, value in props do
 						ApplyProp(
 							realInstance, 
-							classNames[instanceId],
+							className,
 							name, 
 							value, 
 							track
@@ -339,7 +341,7 @@ local function update(delta)
 
 		local frameCallback = track.FrameCallbacks[frameId]
 		if frameCallback then
-			task.spawn(frameCallback)
+			task.defer(frameCallback)
 		end
 		
 		while true do
@@ -349,7 +351,7 @@ local function update(delta)
 				break
 			end
 
-			emitMarkers(track, tostring(marker))
+			task.defer(emitMarkers, track, tostring(marker))
 			table.remove(track.MarkerSequence, 1)
 		end
 		
