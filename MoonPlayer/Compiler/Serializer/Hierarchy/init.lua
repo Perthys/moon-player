@@ -210,7 +210,7 @@ local function parseKeyframes(keyframesInst, instance, disableOptimization)
 		})
 	end
 
-	if disableOptimization then
+	if disableOptimization or isStatic then
 		return frames 
 	end 
 
