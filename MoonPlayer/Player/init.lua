@@ -194,9 +194,19 @@ end
 
 function Player:_checkApplyPropTransformer(instanceId, name, value)
 	if name == "CFrame" then
-		return CFrame.new(self.JointCFrames[instanceId].Position) * value
+		local cframe = self.JointCFrames[instanceId]
+		if not cframe then
+			return value
+		end 
+
+		return cframe * value
 	elseif name == "Position" then
-		return value + self.JointCFrames[instanceId].Position
+		local cframe = self.JointCFrames[instanceId]
+		if not cframe then
+			return value
+		end 
+
+		return value + cframe.Position
 	end 
 
 	return value

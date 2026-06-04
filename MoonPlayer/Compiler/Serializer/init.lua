@@ -86,17 +86,17 @@ function Serializer:writePropertyValueToStream(stream, value)
 		
 		if #keypoints == 2 and keypoints[1].Value == keypoints[2].Value then
 			keypoints[2] = nil
-		else
-			stream:writeu8(#keypoints)
+		end
+		
+		stream:writeu8(#keypoints)
 
-			for _, keypoint  in keypoints do
-				stream:writef16(keypoint.Time)
+		for _, keypoint  in keypoints do
+			stream:writef16(keypoint.Time)
 
-				local color = keypoint.Value
-				stream:writef32(color.R)
-				stream:writef32(color.G)
-				stream:writef32(color.B)
-			end
+			local color = keypoint.Value
+			stream:writef32(color.R)
+			stream:writef32(color.G)
+			stream:writef32(color.B)
 		end
 	elseif valueType == "NumberSequence" then
 		stream:writeu8(PropertyType.NumberSequence)
