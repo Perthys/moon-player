@@ -189,6 +189,11 @@ function Player:_handleBaseFlags()
 end
 
 function Player:_checkApplyPropTransformer(instanceId, name, value)
+	local serializerFlags = self.Data.Information.Flags
+	if serializerFlags and serializerFlags.RelativeCFrameOffset == false then
+		return value
+	end
+
 	if name == "CFrame" then
 		local cframe = self.JointCFrames[instanceId]
 		if not cframe then
