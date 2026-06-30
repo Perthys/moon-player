@@ -85,6 +85,10 @@ function Player:SetDuration(duration)
     local originalDuration = originalLength / originalFrameRate
 
     self.FrameRate = originalFrameRate * (originalDuration / duration)
+	self.Flags.FrameAdvance = math.max(
+		self.Flags.FrameAdvance,
+		self.FrameRate / originalFrameRate
+	)
 end
 
 function Player:ReplaceInstance(original, new)
@@ -342,13 +346,19 @@ local function update(delta)
 		end
 
 		local frameId = tostring(currentFrame)
-		local frame = track.FrameAdvance[frameId]
 
 		local instanceOverride = track.Deserializer.targetOverrides
 		local classNames = track.ClassNames
 		local instances = track.Deserializer.targets
 		
-		if frame then			
+		for frameNum = lastFrame + 1, currentFrame do
+			local currentFrameId = tostring(frameNum)
+			local frame = track.FrameAdvance[currentFrameId]
+
+			if not frame then
+				continue
+			end
+
 			for instanceId, props in frame do
 				local realInstance = instanceOverride[instanceId] 
 					or instances[instanceId]
@@ -370,8 +380,9 @@ local function update(delta)
 					PlayingTracks[track] = nil
 				end
 			end
-		end
-	
+
+			track.FrameAdvance[currentFrameId] = nil
+		end 
 
 		local frameCallback = track.FrameCallbacks[frameId]
 		if frameCallback then
@@ -389,7 +400,6 @@ local function update(delta)
 			table.remove(track.MarkerSequence, 1)
 		end
 		
-		track.FrameAdvance[tostring(lastFrame)] = nil
 		track.CurrentFrame = currentFrame
 		track.TimePosition += delta
 	end
