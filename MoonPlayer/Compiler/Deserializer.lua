@@ -9,7 +9,6 @@ local PropertyType = Enums.PropertyType
 
 local MARKER_TYPES = { "finish", "start" } -- do not reorder these
 
-
 local Deserializer = {}
 
 function Deserializer.new(save, flags)
@@ -19,58 +18,57 @@ function Deserializer.new(save, flags)
 		data = data,
 		save = save,
 		flags = data.Information.Flags,
-		
+
 		strings = {},
 		values = {},
 		objects = {},
 		cframes = {},
-		
+
 		targets = {},
 		targetOverrides = {},
 
 		unresolvedInstances = {},
-		
+
 		defaults = {},
 
-		instanceOverrides = flags.InstanceOverrides or {},
+		overrides = flags.InstanceOverrides or {},
+
+		items = {},
+		jointGroups = {},
+		objectQueries = {},
+
 		playerFlags = flags,
-		
+
 		markers = {
 			finish = {},
-			start = {}
-		}
+			start = {},
+		},
 	}, { __index = Deserializer })
-	
+
 	self:deserializeDictionaries()
 	self:deserializeSequence()
 	self:deserializeMarkers()
 	self:deserializeHierarchy()
 	self:deserializeDefaults()
-	
+
 	self.frameBuffer = self:decompressBufferFromParts(save.frames)
-	
-	return self 
+
+	return self
 end
 
 function Deserializer:overrideInstance(original, new)
-	for id, instance in self.targets do
-		if instance == original or instance:GetFullName() == original then
-			self.targetOverrides[id] = new
-		end
-	end
+	local key = if typeof(original) == "Instance" then original:GetFullName() else original
+
+	self.overrides[key] = new
+
+	self:resolveTargets()
+	self:resolveObjects()
 end
 
 function Deserializer:decompressBuffer(buf)
-	local decodedBuffer = EncodingService:Base64Decode(
-		buffer.fromstring(buf.Value)
-	)
-	
-	return Stream.new(
-		EncodingService:DecompressBuffer(
-			decodedBuffer, 
-			Enum.CompressionAlgorithm.Zstd
-		)
-	)
+	local decodedBuffer = EncodingService:Base64Decode(buffer.fromstring(buf.Value))
+
+	return Stream.new(EncodingService:DecompressBuffer(decodedBuffer, Enum.CompressionAlgorithm.Zstd))
 end
 
 function Deserializer:decompressBufferFromParts(holder)
@@ -81,7 +79,7 @@ function Deserializer:decompressBufferFromParts(holder)
 	for i = 1, #parts do
 		local part = holder:FindFirstChild(tostring(i))
 		assert(part, `frame buffer missing part: {i}`)
-		
+
 		table.insert(buffers, buffer.fromstring(part.Value))
 	end
 
@@ -101,10 +99,7 @@ function Deserializer:decompressBufferFromParts(holder)
 	end
 
 	return Stream.new(
-		EncodingService:DecompressBuffer(
-			EncodingService:Base64Decode(out), 
-			Enum.CompressionAlgorithm.Zstd
-		)
+		EncodingService:DecompressBuffer(EncodingService:Base64Decode(out), Enum.CompressionAlgorithm.Zstd)
 	)
 end
 
@@ -116,16 +111,12 @@ function Deserializer:deserializeGenericValue(stream, valueType)
 	elseif valueType == PropertyType.Number then
 		return stream:readf64()
 	elseif valueType == PropertyType.Color3 then
-		return Color3.new(
-			stream:readf32(),
-			stream:readf32(),
-			stream:readf32()
-		)
+		return Color3.new(stream:readf32(), stream:readf32(), stream:readf32())
 	elseif valueType == PropertyType.Vector3 then
-		return stream:readvector3()	
+		return stream:readvector3()
 	elseif valueType == PropertyType.Nil then
 		return nil
-	else 
+	else
 		warn("unknown value type", valueType)
 	end
 end
@@ -138,7 +129,7 @@ function Deserializer:deserializeValue(stream)
 
 		if serializeMethod == "Attributes" then
 			local cframeId = stream:readu32()
-			
+
 			return self.cframes[math.floor(cframeId / 1000)]:GetAttribute(tostring(cframeId)), cframeId
 		elseif serializeMethod == "Bytes" then
 			return stream:readCFrame(self.flags.CFramePosSizeT, self.flags.CFrameRotSizeT)
@@ -154,11 +145,7 @@ function Deserializer:deserializeValue(stream)
 
 		for _ = 1, stream:readu8() do
 			local time = stream:readf16()
-			local color = Color3.new(
-				stream:readf32(), 
-				stream:readf32(), 
-				stream:readf32()
-			)
+			local color = Color3.new(stream:readf32(), stream:readf32(), stream:readf32())
 
 			table.insert(keypoints, ColorSequenceKeypoint.new(time, color))
 		end
@@ -172,16 +159,12 @@ function Deserializer:deserializeValue(stream)
 		local keypoints = {}
 
 		for _ = 1, stream:readu8() do
-			table.insert(keypoints, NumberSequenceKeypoint.new(
-				stream:readf32(),
-				stream:readf32(),
-				stream:readf32()
-			))
+			table.insert(keypoints, NumberSequenceKeypoint.new(stream:readf32(), stream:readf32(), stream:readf32()))
 		end
 
 		if #keypoints == 1 then
 			return NumberSequence.new(keypoints[1].Value)
-		else 
+		else
 			return NumberSequence.new(keypoints)
 		end
 	end
@@ -189,81 +172,92 @@ function Deserializer:deserializeValue(stream)
 	return self:deserializeGenericValue(stream, valueType)
 end
 
-
 function Deserializer:deserializeDictionaries()
 	local strings = {}
 	local values = {}
-	local objects = {}
 	local cframes = {}
-	
-	local stream = self:decompressBuffer(self.save.dict)
 
+	local stream = self:decompressBuffer(self.save.dict)
 
 	for _, child in self.save.cframes:GetChildren() do
 		cframes[tonumber(child.Name)] = child
 	end
-	
+
 	for _ = 1, stream:readu16() do
 		local id = stream:readu16()
-		
+
 		strings[id] = stream:readstring(16)
 	end
-	
+
 	for _ = 1, stream:readu16() do
 		local id = stream:readu16()
 		local value = self:deserializeGenericValue(stream)
-		
+
 		values[id] = value
 	end
-	
+
+	local objectQueries = {}
 	for _ = 1, stream:readu16() do
 		local id = stream:readu16()
 		local query = stream:readstring(16)
-		
-		local inst = game:QueryDescendants(query)[1]
+
+		objectQueries[id] = query
+	end
+
+	self.objectQueries = objectQueries
+	self.cframes = cframes
+	self.strings = strings
+	self.values = values
+
+	self:resolveObjects()
+end
+
+function Deserializer:resolveObjects()
+	local objects = {}
+
+	for id, query in self.objectQueries do
+		local inst = Resolver.resolveObjectWithOverrides(query, self.overrides)
+
 		if not inst then
 			warn("fail to resolve object", query)
 			continue
 		end
-		
+
 		objects[id] = inst
 	end
-	
+
 	self.objects = objects
-	self.cframes = cframes
-	self.strings = strings
-	self.values = values
 end
 
 function Deserializer:deserializeSequence()
 	local stream = self:decompressBuffer(self.save.sequence)
-	
+
 	local sequence = {}
 	for _ = 1, stream:readu16() do
 		table.insert(sequence, stream:readu16())
 	end
-	
+
 	self.sequence = sequence
 end
 
 function Deserializer:deserializeDefaults()
 	local stream = self:decompressBuffer(self.save.defaults)
 	local defaults = {}
-	
+
 	for _ = 1, stream:readu16() do
 		local instanceId = stream:readu16()
 		local props = {}
-		
-		for _=  1, stream:readu8() do
+
+		for _ = 1, stream:readu8() do
 			local name = self.strings[stream:readu16()]
 			local value = self:deserializeValue(stream)
-			
+
 			props[name] = value
 		end
-		
+
 		defaults[tostring(instanceId)] = props
 	end
-	
+
 	self.defaults = defaults
 end
 
@@ -287,7 +281,7 @@ function Deserializer:deserializeMarkers()
 				frame[markerType] = markerData
 			end
 
-			for _ =  1, stream:readu16() do
+			for _ = 1, stream:readu16() do
 				local id = stream:readu16()
 				local data = {}
 
@@ -296,7 +290,7 @@ function Deserializer:deserializeMarkers()
 					local kfMarkers = {}
 
 					for _ = 1, stream:readu8() do
-						local kfMarkerName = stream:readstring(8)	
+						local kfMarkerName = stream:readstring(8)
 						local kfMarkerValue = stream:readstring(16)
 
 						kfMarkers[kfMarkerName] = kfMarkerValue
@@ -307,7 +301,7 @@ function Deserializer:deserializeMarkers()
 
 				markerData[tostring(id)] = data
 			end
-		end		
+		end
 	end
 
 	self.markers = markers
@@ -316,68 +310,93 @@ end
 function Deserializer:throwResolverError(path, identifier)
 	if self.playerFlags.StrictMode then
 		error(`failed to resolve "{path}"`)
-	end 
+	end
 
 	if self.playerFlags.LogUnresolvedInstances then
 		warn(`failed to resolve "{path}"`)
-	end 
+	end
 
 	table.insert(self.unresolvedInstances, identifier)
-end 
+end
 
 function Deserializer:deserializeHierarchy()
 	local stream = self:decompressBuffer(self.save.hierarchy)
-	
-	local targets = {}
-	for _, item in self.data.Items do
-		local concatPath = table.concat(item.Path.InstanceNames, ".")
-		local overridenInstance = self.instanceOverrides[concatPath]
-		local identifier = tostring(item.Identifier)
-		
-		if not overridenInstance then
-			overridenInstance = Resolver.resolveAnimPath(item.Path)
-		end
+	local items = {}
 
-		if not overridenInstance then
-			self:throwResolverError(concatPath, identifier)
-		end
-		
-		targets[identifier] = overridenInstance
+	for _, item in self.data.Items do
+		table.insert(items, {
+			identifier = tostring(item.Identifier),
+			path = item.Path,
+		})
 	end
-	
+
+	self.items = items
+
+	local jointGroups = {}
 	for _ = 1, stream:readu16() do
 		local rootId = stream:readu16()
-		local root = targets[tostring(rootId)]
-
 		local jointCount = stream:readu16()
-		if jointCount > 0 then 
-			local jointsHier, findSmartJoint
 
-			if root then
-				jointsHier, findJointSmart = Resolver.resolveJoints(root)
+		local joints = {}
+		for _ = 1, jointCount do
+			local jointId = stream:readu16()
+			local hier = stream:readstring(16)
+
+			table.insert(joints, {
+				identifier = tostring(jointId),
+				hier = hier,
+			})
+		end
+
+		table.insert(jointGroups, {
+			rootId = tostring(rootId),
+			joints = joints,
+		})
+	end
+	self.jointGroups = jointGroups
+
+	self:resolveTargets()
+end
+
+function Deserializer:resolveTargets()
+	self.unresolvedInstances = {}
+
+	local targets = {}
+
+	for _, item in self.items do
+		local instance = Resolver.resolveAnimPathWithOverrides(item.path, self.overrides)
+
+		if not instance then
+			self:throwResolverError(table.concat(item.path.InstanceNames, "."), item.identifier)
+		end
+
+		targets[item.identifier] = instance
+	end
+
+	for _, group in self.jointGroups do
+		local root = targets[group.rootId]
+
+		local jointsHier, findJointSmart
+		if root then
+			jointsHier, findJointSmart = Resolver.resolveJoints(root)
+		end
+
+		for _, joint in group.joints do
+			if not root then
+				self:throwResolverError(joint.hier, joint.identifier)
+				continue
 			end
-			
-			for _ = 1, jointCount do
-				local jointId = stream:readu16()
-				local hier = stream:readstring(16)
-				local jointIdentifier = tostring(jointId)
 
-				if not root then
-					self:throwResolverError(hier, jointIdentifier)
-					continue
-				end
-		
-				local jointData = jointsHier[hier] or (findJointSmart and findJointSmart(hier)) or nil
+			local jointData = jointsHier[joint.hier] or (findJointSmart and findJointSmart(joint.hier)) or nil
 
-				if jointData and jointData.Joint then
-					targets[jointIdentifier] = jointData.Joint
-				else 
-					self:throwResolverError(hier, jointIdentifier)
-				end
+			if jointData and jointData.Joint then
+				targets[joint.identifier] = jointData.Joint
+			else
+				self:throwResolverError(joint.hier, joint.identifier)
 			end
 		end
 	end
-	
+
 	self.targets = targets
 end
 

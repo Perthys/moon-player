@@ -21,7 +21,26 @@ rojo serve place.project.json
 
 ## Runtime Usage
 
-`Player.new(track, instanceOverrides?)` expects a compiled MoonSave
+`Player.new(track, flags?)` expects a compiled MoonSave. Flags are built from
+`MoonPlayer.Flags.Player` and combined with `+`.
+
+### Instance overrides
+
+Use the `InstanceOverrides` flag to retarget an animation onto a different rig/model. The
+key is the dot-path of an animated instance and the value is the instance to use instead.
+An override **cascades**: everything underneath the overridden instance — descendant items,
+rig joints, and `ObjectValue` references — is resolved relative to the new instance.
+
+```lua
+local Flags = MoonPlayer.Flags.Player
+
+local player = MoonPlayer.Player.new(track, Flags.InstanceOverrides({
+	["Workspace.Dummy"] = workspace.OtherDummy,
+}))
+```
+
+Overrides can also be applied after creation with `player:ReplaceInstance(original, new)`,
+where `original` is an Instance or its dot-path. Call it before `Play()`.
 
 Example:
 
@@ -31,9 +50,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local MoonPlayer = require(ReplicatedStorage.MoonPlayer)
 local track = ReplicatedStorage.Animations.Wave
 
-local player = MoonPlayer.Player.new(track, {
+local player = MoonPlayer.Player.new(track, MoonPlayer.Flags.Player.InstanceOverrides({
 	["Workspace.Dummy"] = workspace.Dummy,
-})
+}))
 
 player:OnMarkerReached("Footstep", function(target, isFinished, kfMarkers)
 	print("marker", target, isFinished)
@@ -58,6 +77,7 @@ Main methods:
 - `OnFinished(callback)` runs the callback when the track ends.
 - `OnMarkerReached(name, callback)` runs `callback(targetInstance, isFinishedMarker, kfmarkers)` when a named marker is reached.
 - `OnFrameReached(frame, callback)` runs `callback()` when a target frame has been reached
+- `ReplaceInstance(original, new)` remaps `original` (an Instance or dot-path) to `new`, cascading to descendants, joints, and object references. Call before `Play()`.
 
 ## Compiling a Track
 

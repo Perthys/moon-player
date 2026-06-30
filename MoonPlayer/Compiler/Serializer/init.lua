@@ -214,9 +214,10 @@ end
 
 function Serializer:initHierarchy()
 	local hierarchy = ParseHierarchy(
-		self.data, 
-		self.save, 
-		not self.flags.RuntimeLengthEncoding
+		self.data,
+		self.save,
+		not self.flags.RuntimeLengthEncoding,
+		self.flags.RelativeCFrameOffset
 	)
 
 	self.frameBuffer = hierarchy.frameBuffer
