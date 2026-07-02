@@ -21,7 +21,7 @@ function Serializer.new(
 		save = save,
 		data = HttpService:JSONDecode(save.Value),
 		flags = flags and Flags.Serializer.Default + flags or Flags.Serializer.Default,
-		resolver = Resolver.new(),
+		resolver = Resolver.new({}, {}),
 		
 		tree = Tree:Clone(),
 		realValues = {},
@@ -439,20 +439,23 @@ function Serializer:buildDictBuffer()
 	
 	stream:writeu16(objectDict.count)
 	for obj, id in objectDict.data do
-		local currentObj = obj
-		local tbl = {}
-		
-		while currentObj ~= game and currentObj do
-			tbl = {
-				`{currentObj.ClassName}[Name="{currentObj.Name}"]`, 
-				unpack(tbl)
-			}
-			
-			currentObj = currentObj.Parent
-		end
-		
 		stream:writeu16(id)
-		stream:writestring(table.concat(tbl, " > "), 16)
+		stream:createMarker("COUNT", 1)
+
+		local currentObj = obj
+		local count = 0
+
+		while currentObj ~= game and currentObj do
+			stream:writestring(currentObj.Name, 8)
+			stream:writestring(currentObj.ClassName, 8)
+
+			currentObj = currentObj.Parent
+			count += 1
+		end
+
+		stream:seekMarker("COUNT")
+		stream:writeu8(count)
+		stream:resume()
 	end
 	
 	self.tree.dict.Value = self:encodeStream(stream)

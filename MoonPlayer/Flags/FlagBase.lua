@@ -16,7 +16,15 @@ function FlagBase.CreateCallFlag(key, default)
 	
 	return function(value)
 		self[key] = value
-		return self
+		return setmetatable(self, {
+            __add = function(flags, newFlag)
+                for key, value in newFlag do
+                    flags[key] = value
+                end
+
+                return flags
+            end
+        })
 	end
 end
 

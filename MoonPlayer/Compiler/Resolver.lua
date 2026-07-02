@@ -7,10 +7,7 @@ local __index do
 end
 
 local function mergePath(path, start, finish)
-	local names = table.concat(path.InstanceNames, ".", start, finish)
-	local types = table.concat(path.InstanceTypes, ".", start, finish)
-
-	return `{names}-{types}`
+	return table.concat(path.InstanceNames, ".", start, finish)
 end
 
 local function fastResolvePath(path, root)
@@ -29,11 +26,17 @@ end
 
 local Resolver = {}
 
-function Resolver.new()
+function Resolver.new(overrides, excluded)
 	local self = {
 		cache = {},
-		internalCache = {}
+		internalCache = {},
+		excluded = excluded,
 	}
+
+	for name, inst in overrides do
+		self.cache[name] = inst
+		self.internalCache[name] = inst
+	end 
 
 	return setmetatable(self, {
 		__index = Resolver
@@ -97,13 +100,17 @@ end
 function Resolver:resolveInstance(path, root)
 	root = root or game
 
-	if path.InstanceNames[1] == "game" then
+	if tostring(path.InstanceNames[1]):lower() == "game" then
 		table.remove(path.InstanceNames, 1)
 		table.remove(path.InstanceTypes, 1)
 	end 
 
 	local key = mergePath(path, 1, #path.InstanceNames)
 	local cachedInstance = self.cache[key]
+
+	if self.excluded[key] then
+		return 
+	end 
 
 	if cachedInstance then
 		return cachedInstance

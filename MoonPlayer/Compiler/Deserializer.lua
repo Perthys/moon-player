@@ -14,13 +14,14 @@ local Deserializer = {}
 
 function Deserializer.new(save, flags)
 	local data = HttpService:JSONDecode(save.Value)
+	local overrides = flags.InstanceOverrides or {}
 
 	local self = setmetatable({
 		data = data,
 		save = save,
 		flags = data.Information.Flags,
 
-		resolver = Resolver.new(),
+		resolver = Resolver.new(overrides, {}),
 		
 		strings = {},
 		values = {},
@@ -34,7 +35,7 @@ function Deserializer.new(save, flags)
 		
 		defaults = {},
 
-		instanceOverrides = flags.InstanceOverrides or {},
+		instanceOverrides = overrides,
 		playerFlags = flags,
 		
 		markers = {
@@ -220,11 +221,19 @@ function Deserializer:deserializeDictionaries()
 	
 	for _ = 1, stream:readu16() do
 		local id = stream:readu16()
-		local query = stream:readstring(16)
+		local path = { 
+			InstanceNames = {},
+			InstanceTypes = {}
+		}
 		
-		local inst = game:QueryDescendants(query)[1]
+		for _ = 1, stream:readu8() do
+			table.insert(path.InstanceNames, 1, stream:readstring(8))
+			table.insert(path.InstanceTypes, 1, stream:readstring(8))
+		end
+
+		local inst = self.resolver:resolveInstance(path)
 		if not inst then
-			warn("fail to resolve object", query)
+			warn("fail to resolve object", table.concat(path.InstanceNames, "."))
 			continue
 		end
 		
