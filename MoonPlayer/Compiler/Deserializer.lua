@@ -19,6 +19,8 @@ function Deserializer.new(save, flags)
 		data = data,
 		save = save,
 		flags = data.Information.Flags,
+
+		resolver = Resolver.new(),
 		
 		strings = {},
 		values = {},
