@@ -46,7 +46,7 @@ end
 function Resolver:resolveJoints(hier)
 	local joints = {}
 
-	for _, inst in hier:QueryDescendants("Motor6D[Active = true]") do
+	for _, inst in hier:QueryDescendants("Motor6D") do
 		local part1 = inst.Part1 
 		local name = part1 and part1.Name
 
