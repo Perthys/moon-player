@@ -346,7 +346,6 @@ local function update(delta)
 		end
 
 		local frameId = tostring(currentFrame)
-
 		local instanceOverride = track.Deserializer.targetOverrides
 		local classNames = track.ClassNames
 		local instances = track.Deserializer.targets
@@ -383,7 +382,7 @@ local function update(delta)
 
 			track.FrameAdvance[currentFrameId] = nil
 		end 
-
+	
 		local frameCallback = track.FrameCallbacks[frameId]
 		if frameCallback then
 			task.defer(frameCallback)
@@ -399,7 +398,7 @@ local function update(delta)
 			task.defer(emitMarkers, track, tostring(marker))
 			table.remove(track.MarkerSequence, 1)
 		end
-		
+
 		track.CurrentFrame = currentFrame
 		track.TimePosition += delta
 	end

@@ -2,6 +2,7 @@ local EncodingService = game:GetService("EncodingService")
 local HttpService = game:GetService("HttpService")
 
 local ParseHierarchy = require("@self/Hierarchy")
+local Resolver = require("./Resolver")
 local Stream = require("./Stream")
 local Enums = require("./Enums")
 local Flags = require("../Flags")
@@ -20,6 +21,7 @@ function Serializer.new(
 		save = save,
 		data = HttpService:JSONDecode(save.Value),
 		flags = flags and Flags.Serializer.Default + flags or Flags.Serializer.Default,
+		resolver = Resolver.new(),
 		
 		tree = Tree:Clone(),
 		realValues = {},
@@ -217,7 +219,8 @@ function Serializer:initHierarchy()
 		self.data,
 		self.save,
 		not self.flags.RuntimeLengthEncoding,
-		self.flags.RelativeCFrameOffset
+		self.flags.RelativeCFrameOffset,
+		self.resolver
 	)
 
 	self.frameBuffer = hierarchy.frameBuffer

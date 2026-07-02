@@ -1,95 +1,19 @@
-local DATAMODEL_TOKENS = {
-	game = true,
-	Game = true,
-	DataModel = true,
-}
-
-local function splitPath(dotPath: string): { string }
-	local segments = {}
-	for segment in string.gmatch(dotPath, "[^.]+") do
-		table.insert(segments, segment)
-	end
-	return segments
-end
-
-local function stripLeadingRoot(segments: { string }): { string }
-	if segments[1] and DATAMODEL_TOKENS[segments[1]] then
-		return { unpack(segments, 2) }
-	end
-	return segments
-end
-
-local function walkFrom(root: Instance, names: { string }, types: { string }, startIndex: number): Instance?
-	if startIndex > #names then
-		return root
-	end
-
-	local current: Instance = root
-	local success = pcall(function()
-		for i = startIndex, #names do
-			local nextInst = (current :: any)[names[i]]
-
-			assert(typeof(nextInst) == "Instance")
-			assert(nextInst.ClassName == types[i])
-
-			current = nextInst
-		end
+local __index do
+	xpcall(function(...)
+		return game.MoonPlayer
+	end, function(...)
+		__index = debug.info(2, "f")
 	end)
-
-	if success then
-		return current
-	end
-
-	local tbl = {}
-	for i = startIndex, #names do
-		table.insert(tbl, `{types[i]}[Name = "{names[i]}"]`)
-	end
-
-	local data
-	success, data = pcall(function()
-		return root:QueryDescendants(table.concat(tbl, " > "))[1]
-	end)
-
-	if success and typeof(data) == "Instance" then
-		return data
-	end
-
-	return nil
 end
 
-local function matchOverride(names: { string }, overrides: { [string]: Instance }?): (Instance?, number?)
-	if not overrides then
-		return nil
-	end
+local function mergePath(path, start, finish)
+	local names = table.concat(path.InstanceNames, ".", start, finish)
+	local types = table.concat(path.InstanceTypes, ".", start, finish)
 
-	local bestInstance: Instance? = nil
-	local bestLen: number? = nil
-
-	for key, instance in overrides do
-		local segments = stripLeadingRoot(splitPath(key))
-		local len = #segments
-
-		if len > 0 and len <= #names and (not bestLen or len > bestLen) then
-			local matches = true
-			for j = 1, len do
-				if segments[j] ~= names[j] then
-					matches = false
-					break
-				end
-			end
-
-			if matches then
-				bestInstance = instance
-				bestLen = len
-			end
-		end
-	end
-
-	return bestInstance, bestLen
+	return `{names}-{types}`
 end
 
--- stolen from moonlite
-local function fastResolvePath(path: MoonAnimPath, root)
+local function fastResolvePath(path, root)
 	local tbl = {}
 
 	for i = 2, #path.InstanceNames do
@@ -102,256 +26,147 @@ local function fastResolvePath(path: MoonAnimPath, root)
 	return root:QueryDescendants(table.concat(tbl, " > "))[1]
 end
 
-local function resolveAnimPath(path: MoonAnimPath?, root: Instance?): Instance?
-	if not path then
-		return nil
-	end
 
-	local numSteps = #path.InstanceNames
-	local current: Instance = root or game
+local Resolver = {}
 
-	local success = pcall(function()
-		for i = 2, numSteps do
-			local name = path.InstanceNames[i]
-			local class = path.InstanceTypes[i]
+function Resolver.new()
+	local self = {
+		cache = {},
+		internalCache = {}
+	}
 
-			local nextInst = (current :: any)[name]
-			assert(typeof(nextInst) == "Instance")
-			assert(nextInst.ClassName == class)
-
-			current = nextInst
-		end
-	end)
-
-	if success then
-		return current
-	end
-
-	local data
-	success, data = pcall(fastResolvePath, path, game)
-
-	if success and typeof(data) == "Instance" then
-		return data
-	end
-
-	return nil
+	return setmetatable(self, {
+		__index = Resolver
+	})
 end
 
-local function resolveJoints(target: Instance)
-	local jointsByHier = {} :: { [string]: MoonJointInfo }
-	local byCanon = {} :: { [string]: MoonJointInfo }
+function Resolver:resolveJoints(hier)
+	local joints = {}
 
-	local function canon(s: string): string
-		s = tostring(s or "")
-		s = s:gsub("[\226\128\152\226\128\153]", "'")
-		s = s:gsub("%s+", " ")
-		s = s:gsub("^%s+", ""):gsub("%s+$", "")
-		return s:lower()
+	for _, inst in hier:QueryDescendants("Motor6D[Active = true]") do
+		local part1 = inst.Part1 
+		local name = part1 and part1.Name
+
+		if not name then
+			continue
+		end 
+
+		joints[name] = {
+			inst = inst,
+			children = {}
+		}
 	end
 
-	local function addKey(key: string, info: MoonJointInfo)
-		jointsByHier[key] = info
-		byCanon[canon(key)] = info
+	for name, data in joints do
+		local joint = data.inst
+
+		local part0 = joint.part0
+		if not part0 then
+			continue
+		end 
+
+		local data0 = joints[part0.Name]
+		if not data0 then
+			continue
+		end 
+
+		data0.children[name] = data
 	end
 
-	local list = {} :: { MoonJointInfo }
+	for _, inst in hier:QueryDescendants("Bone") do
+		joints[inst.Name] = {
+			inst = inst,
+			children = {}
+		}
+	end
 
-	for _, d: Instance in ipairs(target:GetDescendants()) do
-		if d:IsA("Motor6D") then
-			local j = d :: Motor6D
-			local info: MoonJointInfo = { Name = j.Name, Joint = j, Children = {} }
-			table.insert(list, info)
-		elseif d:IsA("Bone") then
-			local b = d :: Bone
-			local info: MoonJointInfo = { Name = b.Name, Joint = b, Children = {} }
-			table.insert(list, info)
+	return function(hier)
+		local parts = string.split(hier, ".")
+
+		local name = table.remove(parts, 1)
+		local data = rawget(joints, name)
+
+		while data and #parts > 0 do
+			data = data.children[table.remove(parts, 1)]
+		end
+
+		return data and data.inst
+	end
+end 
+
+function Resolver:resolveInstance(path, root)
+	root = root or game
+
+	if path.InstanceNames[1] == "game" then
+		table.remove(path.InstanceNames, 1)
+		table.remove(path.InstanceTypes, 1)
+	end 
+
+	local key = mergePath(path, 1, #path.InstanceNames)
+	local cachedInstance = self.cache[key]
+
+	if cachedInstance then
+		return cachedInstance
+	end
+
+	local names = path.InstanceNames
+	local types = path.InstanceTypes
+	
+	local suffixTypes = { types[#names] }
+	local suffixNames = { names[#names] }
+
+	local parentInst = root
+	local startIdx = 1
+
+	for i = #names - 1, 1, -1 do
+		local mergedPath = mergePath(path, 1, i)
+		local cachedInst = self.internalCache[mergedPath]
+
+		if cachedInst then
+			parentInst = cachedInst
+			startIdx = i + 1
+			break
+		end
+
+		table.insert(suffixTypes, 1, types[i])
+		table.insert(suffixNames, 1, names[i])
+	end
+
+	local outputInst
+	local suffixCount = #suffixNames
+
+	for i = 1, suffixCount do
+		local name = suffixNames[i]
+		local type = suffixTypes[i]
+		
+		local success, inst = pcall(__index, parentInst, name)
+		if not success or typeof(inst) ~= "Instance" or inst.ClassName ~= type then
+			break
+		end
+
+		local instKey = mergePath(path, 1, startIdx + i - 1)
+
+		self.internalCache[instKey] = inst
+		parentInst = inst
+		
+		if i == suffixCount then
+			outputInst = inst
 		end
 	end
 
-	local jointToInfo = {} :: { [Instance]: MoonJointInfo }
-	for _, info in ipairs(list) do
-		jointToInfo[info.Joint] = info
-	end
+	if not outputInst then
+		local success, data = pcall(fastResolvePath, path, root)
 
-	for _, info in ipairs(list) do
-		local joint = info.Joint
-		if joint:IsA("Motor6D") then
-			local p0 = (joint :: Motor6D).Part0
-			if p0 then
-				for _, other in ipairs(list) do
-					local oj = other.Joint
-					if oj:IsA("Motor6D") then
-						local op1 = (oj :: Motor6D).Part1
-						if op1 == p0 then
-							other.Children[info.Name] = info
-							info.Parent = other
-							break
-						end
-					elseif oj:IsA("Bone") then
-						if (oj :: Bone).Parent == p0 then
-							other.Children[info.Name] = info
-							info.Parent = other
-							break
-						end
-					end
-				end
-			end
-		elseif joint:IsA("Bone") then
-			local parent = (joint :: Bone).Parent
-			if parent then
-				local parentInfo = jointToInfo[parent]
-				if parentInfo then
-					parentInfo.Children[info.Name] = info
-					info.Parent = parentInfo
-				end
-			end
+		if success and typeof(data) == "Instance" then
+			outputInst = data
 		end
 	end
 
-	for _, info in ipairs(list) do
-		local j = info.Joint
-		if j:IsA("Motor6D") then
-			local m = j :: Motor6D
-			local p0 = m.Part0
-			local p1 = m.Part1
-
-			if p0 then
-				addKey(p0.Name .. "." .. m.Name, info)
-			end
-
-			if p1 then
-				addKey(p1.Name .. "." .. m.Name, info)
-			end
-
-			addKey(m.Name, info)
-			if p0 and p1 then
-				addKey(p0.Name .. "." .. p1.Name, info)
-				addKey(p0.Name .. "." .. m.Name .. "." .. p1.Name, info)
-			end
-		else
-			local b = j :: Bone
-			addKey(b.Name, info)
-			local hier = b.Name
-			local cur = b.Parent
-			while cur and cur ~= target do
-				hier = cur.Name .. "." .. hier
-				cur = cur.Parent
-			end
-			addKey(hier, info)
-		end
+	if outputInst then
+		self.cache[key] = outputInst
 	end
 
-	local function findSmart(tree: string): MoonJointInfo?
-		if jointsByHier[tree] then
-			return jointsByHier[tree]
-		end
-
-		local c = canon(tree)
-		if byCanon[c] then
-			return byCanon[c]
-		end
-
-		for k, v in pairs(jointsByHier) do
-			if k:sub(-#tree) == tree or tree:sub(-#k) == k then
-				return v
-			end
-		end
-
-		for k, v in pairs(byCanon) do
-			if k:sub(-#c) == c or c:sub(-#k) == k then
-				return v
-			end
-		end
-
-		return nil
-	end
-
-	return jointsByHier, findSmart
+	return outputInst
 end
 
-local function resolveAnimPathWithOverrides(path: MoonAnimPath?, overrides: { [string]: Instance }?): Instance?
-	if not path then
-		return nil
-	end
-
-	if overrides then
-		local names = { unpack(path.InstanceNames, 2) }
-		local types = { unpack(path.InstanceTypes, 2) }
-
-		local overrideInstance, matchedLen = matchOverride(names, overrides)
-		if overrideInstance and matchedLen then
-			if matchedLen == #names then
-				return overrideInstance
-			end
-
-			local resolved = walkFrom(overrideInstance, names, types, matchedLen + 1)
-			if resolved then
-				return resolved
-			end
-		end
-	end
-
-	return resolveAnimPath(path)
-end
-
-local function parseObjectQuery(query: string): ({ string }, { string })
-	local names = {}
-	local types = {}
-
-	for class, name in string.gmatch(query, '([%w_]+)%[Name="(.-)"%]') do
-		table.insert(types, class)
-		table.insert(names, name)
-	end
-
-	return names, types
-end
-
-local function resolveObjectWithOverrides(query: string, overrides: { [string]: Instance }?): Instance?
-	local names, types = parseObjectQuery(query)
-
-	if #names > 0 then
-		local overrideInstance, matchedLen = matchOverride(names, overrides)
-		if overrideInstance and matchedLen then
-			if matchedLen == #names then
-				return overrideInstance
-			end
-
-			local resolved = walkFrom(overrideInstance, names, types, matchedLen + 1)
-			if resolved then
-				return resolved
-			end
-		end
-	end
-
-	local success, inst = pcall(function()
-		return game:QueryDescendants(query)[1]
-	end)
-
-	if success and typeof(inst) == "Instance" then
-		return inst
-	end
-
-	if #names > 0 then
-		local tbl = {}
-		for i = 1, #names do
-			table.insert(tbl, `{types[i]}[Name = "{names[i]}"]`)
-		end
-
-		success, inst = pcall(function()
-			return game:QueryDescendants(table.concat(tbl, " "))[1]
-		end)
-
-		if success and typeof(inst) == "Instance" then
-			return inst
-		end
-	end
-
-	return nil
-end
-
-return {
-	resolveJoints = resolveJoints,
-	resolveAnimPath = resolveAnimPath,
-	resolveAnimPathWithOverrides = resolveAnimPathWithOverrides,
-	resolveObjectWithOverrides = resolveObjectWithOverrides,
-}
+return Resolver

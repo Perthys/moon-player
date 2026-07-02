@@ -274,7 +274,7 @@ local function offsetValueByDefault(value, propName, default, realInstance, rela
 	return value
 end
 
-local function ParseHierarchy(data, save, disableOptimization, relativeOffset)
+local function ParseHierarchy(data, save, disableOptimization, relativeOffset, resolver)
 	local frameBuffer = {}
 	local defaults = {}
 	local tree = {}
@@ -295,13 +295,13 @@ local function ParseHierarchy(data, save, disableOptimization, relativeOffset)
 		local rig = frame:FindFirstChild("Rig")
 		local markerTrack = frame:FindFirstChild("MarkerTrack")
 
-		local realInstance = Resolver.resolveAnimPath(item.Path)
+		local realInstance = resolver:resolveInstance(item.Path)
 		if not realInstance then
 			return error("failed to resolve: " .. table.concat(item.Path.InstanceNames, "."))
 		end
 
 		if rig and item.Path.ItemType == "Rig" then
-			local jointsHier, findJointSmart = Resolver.resolveJoints(realInstance)
+			local findJoint = resolver:resolveJoints(realInstance)
 			
 			local joints = rig:QueryDescendants(">#_joint")
 			local jointData = {}
@@ -322,13 +322,13 @@ local function ParseHierarchy(data, save, disableOptimization, relativeOffset)
 				end
 				
 				if keyframes then
-					local joint = jointsHier[hier] or (findJointSmart and findJointSmart(hier)) or nil
-					if not joint or not joint.Joint then
+					local joint = findJoint(hier)
+					if not joint then
 						return error(`failed to resolve: {hier}`)
 					end
 					
-					local isMotor6D = joint.Joint:IsA("Motor6D")
-					for _, keyframe in parseKeyframes(keyframes, joint.Joint, disableOptimization) do
+					local isMotor6D = joint:IsA("Motor6D")
+					for _, keyframe in parseKeyframes(keyframes, joint, disableOptimization) do
 						local value = keyframe.value
 						local frameData = frameBuffer[tostring(keyframe.startTime)]
 						
