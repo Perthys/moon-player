@@ -337,7 +337,7 @@ function Deserializer:deserializeHierarchy()
 		local identifier = tostring(item.Identifier)
 		
 		if not overridenInstance then
-			overridenInstance = self.resolver.resolveInstance(item.Path)
+			overridenInstance = self.resolver:resolveInstance(item.Path)
 		end
 
 		if not overridenInstance then
@@ -355,7 +355,7 @@ function Deserializer:deserializeHierarchy()
 		if jointCount > 0 then 
 			local findJoints
 			if root then
-				findJoints = self.resolver.resolveJoints(root)
+				findJoints = self.resolver:resolveJoints(root)
 			end
 			
 			for _ = 1, jointCount do
