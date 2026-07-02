@@ -10,6 +10,7 @@ export type PlayerFlags = {
     FrameAdvance: (number) -> FlagBase.Flag,
 
     InstanceOverrides: ({ [string]: Instance }) -> FlagBase.Flag,
+    InstanceExclusions: ({ string }) -> FlagBase.Flag,
 
     Default: FlagBase.Flag
 }

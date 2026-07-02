@@ -7,7 +7,8 @@ local Flags = {
     Duration = FlagBase.CreateCallFlag("Duration", -1),
     FrameAdvance = FlagBase.CreateCallFlag("FrameAdvance", 30),
 
-    InstanceOverrides = FlagBase.CreateCallFlag("InstanceOverrides", {})
+    InstanceOverrides = FlagBase.CreateCallFlag("InstanceOverrides", {}),
+    InstanceExclusions = FlagBase.CreateCallFlag("InstanceExclusions", {})
 }
 
 local Default = {
@@ -17,7 +18,8 @@ local Default = {
     Duration = -1,
     FrameAdvance = 30,
 
-    InstanceOverrides = {}
+    InstanceOverrides = {},
+    InstanceExclusions = {}
 }
 
 return FlagBase.BuildFlags(Flags, Default)

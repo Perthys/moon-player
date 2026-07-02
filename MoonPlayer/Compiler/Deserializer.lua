@@ -14,14 +14,16 @@ local Deserializer = {}
 
 function Deserializer.new(save, flags)
 	local data = HttpService:JSONDecode(save.Value)
+
 	local overrides = flags.InstanceOverrides or {}
+	local exclusions = flags.InstanceExclusions or {}
 
 	local self = setmetatable({
 		data = data,
 		save = save,
 		flags = data.Information.Flags,
 
-		resolver = Resolver.new(overrides, {}),
+		resolver = Resolver.new(overrides, exclusions),
 		
 		strings = {},
 		values = {},
