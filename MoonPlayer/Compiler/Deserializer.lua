@@ -335,7 +335,7 @@ function Deserializer:deserializeHierarchy()
 		local identifier = tostring(item.Identifier)
 		
 		if not overridenInstance then
-			overridenInstance = Resolver.resolveAnimPath(item.Path)
+			overridenInstance = self.resolver.resolveInstance(item.Path)
 		end
 
 		if not overridenInstance then
@@ -351,10 +351,9 @@ function Deserializer:deserializeHierarchy()
 
 		local jointCount = stream:readu16()
 		if jointCount > 0 then 
-			local jointsHier, findSmartJoint
-
+			local findJoints
 			if root then
-				jointsHier, findJointSmart = Resolver.resolveJoints(root)
+				findJoints = self.resolver.resolveJoints(root)
 			end
 			
 			for _ = 1, jointCount do
@@ -367,10 +366,9 @@ function Deserializer:deserializeHierarchy()
 					continue
 				end
 		
-				local jointData = jointsHier[hier] or (findJointSmart and findJointSmart(hier)) or nil
-
-				if jointData and jointData.Joint then
-					targets[jointIdentifier] = jointData.Joint
+				local joint = findJoints(hier)
+				if joint then
+					targets[jointIdentifier] = joint
 				else 
 					self:throwResolverError(hier, jointIdentifier)
 				end
