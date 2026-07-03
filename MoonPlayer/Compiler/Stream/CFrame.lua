@@ -47,7 +47,7 @@ const function cfToQuat(cf: CFrame): (number, number, number, number)
     return qx, qy, qz, qw
 end
 
-const function writeRotation(self, cframe: CFrame)
+const function writeRotation(self: any, cframe: CFrame): ()
     local rx, ry, rz, rw = cfToQuat(cframe)
     const vals = { rx, ry, rz, rw }
 
@@ -79,7 +79,7 @@ const function writeRotation(self, cframe: CFrame)
     self:writeu16(c)
 end
 
-const function readRotation(self)
+const function readRotation(self: any): (number, number, number, number)
     const hi = self:readu32()
     const c  = self:readu16()
 
@@ -106,7 +106,7 @@ end
 
 const CF = {}
 
-function CF.read(self, posT, rotT)
+function CF.read(self: any, posT: number, rotT: number): CFrame
     local x, y, z = 0, 0, 0
     if posT == 8 then
         x = self:readf64()
@@ -137,7 +137,7 @@ function CF.read(self, posT, rotT)
     return CFrame.new(x, y, z, rx, ry, rz, rw)
 end
 
-function CF.write(self, posT, rotT, cframe: CFrame)
+function CF.write(self: any, posT: number, rotT: number, cframe: CFrame): ()
     if posT == 8 then
         self:writef64(cframe.X)
         self:writef64(cframe.Y)

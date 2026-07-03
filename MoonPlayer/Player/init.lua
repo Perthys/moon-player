@@ -2,6 +2,7 @@ const FRAME_ADVANCE_HZ = Enum.StepFrequency.Hz15
 
 
 const HttpService = game:GetService("HttpService")
+const LogService = game:GetService("LogService")
 const RunService = game:GetService("RunService")
 
 const Interpolator = require("./Interpolator")
@@ -19,7 +20,7 @@ const IGNORED_DEFAULTS = { "Emit", "CFrame" }
 const Player = {}
 
 
-function Player.new(track, flags)
+function Player.new(track: StringValue, flags: Flags.Flag?)
 	const Data = HttpService:JSONDecode(track.Value)
 	local playerFlags = Flags.Player.Default
 
@@ -60,16 +61,16 @@ function Player.new(track, flags)
 	return self
 end
 
-function Player:Stop()
+function Player:Stop(): ()
 	PlayingTracks[self] = nil
 	self:_restore()
 end
 
-function Player:Resume()
+function Player:Resume(): ()
 	PlayingTracks[self] = true
 end
 
-function Player:Play()
+function Player:Play(): ()
 	self:_restore()
 
 	self:_buildMarkerSequence()
@@ -79,7 +80,7 @@ function Player:Play()
 	PlayingTracks[self] = true
 end
 
-function Player:SetDuration(duration)
+function Player:SetDuration(duration: number): ()
     const originalFrameRate = self.OriginalFrameRate
     const originalLength = self.Data.Information.Length
     const originalDuration = originalLength / originalFrameRate
@@ -91,24 +92,24 @@ function Player:SetDuration(duration)
 	)
 end
 
-function Player:ReplaceInstance(original, new)
+function Player:ReplaceInstance(original: Instance | string, new: Instance): ()
 	return self.Deserializer:overrideInstance(original, new)
 end
 
 
-function Player:OnMarkerReached(name, callback)
+function Player:OnMarkerReached(name: string, callback: (Instance, boolean, { [string]: string }) -> ()): ()
 	self.MarkerCallbacks[name] = callback
 end
 
-function Player:OnFinished(callback)
+function Player:OnFinished(callback: () -> ()): ()
 	self.FinishedCallbacks[callback] = true
 end
 
-function Player:OnFrameReached(frame, callback)
+function Player:OnFrameReached(frame: number, callback: () -> ()): ()
 	self.FrameCallbacks[tostring(frame)] = callback
 end
 
-function Player:_buildMarkerSequence()
+function Player:_buildMarkerSequence(): ()
 	const sequence = {}
 
 	for frameId in self.Deserializer.markers do
@@ -143,11 +144,11 @@ function Player:_restore()
 		
 		if not realInstance then
 			if self.Flags.StrictMode then
-				return error(`failed to restore track to default instance "{instanceId}" is missing`)
+				return LogService:Error('[MoonPlayer/Player]: failed to restore track to default instance "{instanceId}" is missing', {instanceId = instanceId})
 			end
 
 			if self.Flags.LogUnresolvedInstances then
-				warn(`failed to resolve instance: "{instanceId}"`)
+				LogService:Warn('[MoonPlayer/Player]: failed to resolve instance: "{instanceId}"', {instanceId = instanceId})
 			end
 
 			continue
@@ -165,9 +166,11 @@ function Player:_restore()
 			ApplyProp(realInstance, realInstance.ClassName, name, value, self)
 		end
 	end
+
+	return nil
 end
 
-function Player:_setClassNames()
+function Player:_setClassNames(): ()
 	const classNames = {}
 
 	const instanceOverride = self.Deserializer.targetOverrides
@@ -184,7 +187,7 @@ function Player:_setClassNames()
 	self.ClassNames = classNames
 end
 
-function Player:_handleBaseFlags()
+function Player:_handleBaseFlags(): ()
 	const flags = self.Flags 
 
 	if flags.Duration ~= -1 then
@@ -192,7 +195,7 @@ function Player:_handleBaseFlags()
 	end
 end
 
-function Player:_checkApplyPropTransformer(instanceId, name, value)
+function Player:_checkApplyPropTransformer(instanceId: string, name: string, value: any): any
 	const serializerFlags = self.Data.Information.Flags
 	if serializerFlags and serializerFlags.RelativeCFrameOffset == false then
 		return value
@@ -217,7 +220,7 @@ function Player:_checkApplyPropTransformer(instanceId, name, value)
 	return value
 end
 
-function Player:_advance()
+function Player:_advance(): ()
 	const state = self.FrameState
 	const advance = self.FrameAdvance 
 	const reader = self.Reader
@@ -294,7 +297,7 @@ function Player:_advance()
 	end
 end
 
-const function emitMarkers(track, frameId)
+const function emitMarkers(track: any, frameId: string): ()
 	const markers = track.Deserializer.markers[frameId]
 	if not markers then
 		return 
@@ -303,8 +306,8 @@ const function emitMarkers(track, frameId)
 	const instanceOverride = track.Deserializer.targetOverrides
 	const instances = track.Deserializer.targets
 
-	for markerType, markers in markers do
-		for instanceId, markerList in markers do
+	for markerType, subMarkers in markers do
+		for instanceId, markerList in subMarkers do
 			const realInstance = instanceOverride[instanceId] 
 				or instances[instanceId]
 			
@@ -324,7 +327,7 @@ const function emitMarkers(track, frameId)
 	end
 end
 
-const function update(delta)
+const function update(delta: number): ()
 	for track in PlayingTracks do
 		const currentFrame = math.floor(track.TimePosition * track.FrameRate)
 		const lastFrame = track.CurrentFrame
@@ -375,7 +378,7 @@ const function update(delta)
 						)
 					end
 				else
-					warn("failed to play track, unknown instance", instanceId)
+					LogService:Warn("[MoonPlayer/Player]: failed to play track, unknown instance {instanceId}", {instanceId = instanceId})
 					PlayingTracks[track] = nil
 				end
 			end
@@ -404,7 +407,7 @@ const function update(delta)
 	end
 end
 
-const function updateAttachments()
+const function updateAttachments(): ()
 	for track in PlayingTracks do
 		for inst, attach in track.PartAttachments do
 			inst.CFrame = attach.CFrame
@@ -412,7 +415,7 @@ const function updateAttachments()
 	end
 end 
 
-const function framePregen(delta)
+const function framePregen(delta: number): ()
 	for track in PlayingTracks do
 		if track.CurrentAdvance == track.CurrentFrame + track.Flags.FrameAdvance then
 			continue

@@ -1,5 +1,6 @@
 const EncodingService = game:GetService("EncodingService")
 const HttpService = game:GetService("HttpService")
+const LogService = game:GetService("LogService")
 
 const ParseHierarchy = require("@self/Hierarchy")
 const Resolver = require("./Resolver")
@@ -43,7 +44,7 @@ function Serializer.new(
 	return self 
 end
 
-function Serializer:writeCFrame(stream, cframe)
+function Serializer:writeCFrame(stream: any, cframe: CFrame): ()
 	const serializeMethod = self.flags.CFrameSerializeMethod
 
 	if serializeMethod == "Attributes" then
@@ -56,7 +57,7 @@ function Serializer:writeCFrame(stream, cframe)
 	end
 end
 
-function Serializer:writePropertyValueToStream(stream, value)
+function Serializer:writePropertyValueToStream(stream: any, value: any): ()
 	const valueType = typeof(value)
 
 	if valueType == "boolean" then
@@ -116,12 +117,15 @@ function Serializer:writePropertyValueToStream(stream, value)
 			stream:writef32(keypoint.Envelope)
 		end
 	else
-		print(debug.traceback())
-		warn("invalid type", valueType, value)
+		LogService:Warn("[MoonPlayer/Compiler/Serializer]: invalid type {valueType} for value {value}\n{traceback}", {
+			valueType = valueType,
+			value = value,
+			traceback = debug.traceback(),
+		})
 	end
 end
 
-function Serializer:writeValueToStream(stream, value)
+function Serializer:writeValueToStream(stream: any, value: any): ()
 	const valueType = typeof(value)
 
 	if valueType == "number" then
@@ -137,17 +141,17 @@ function Serializer:writeValueToStream(stream, value)
 		stream:writeu8(PropertyType.Vector3)
 		stream:writevector3(value)
 	else 
-		warn("unknown type", valueType)
+		LogService:Warn("[MoonPlayer/Compiler/Serializer]: unknown type {valueType}", {valueType = valueType})
 	end
 end
 
-function Serializer:writeStringId(stream, name)
+function Serializer:writeStringId(stream: any, name: string): ()
 	stream:writeu16(
 		self:fetchIdFromCompressionDictionary("strings", name)
 	)
 end
 
-function Serializer:encodeStream(stream)
+function Serializer:encodeStream(stream: any): string
 	const compressedBuffer = EncodingService:CompressBuffer(
 		stream:tobuffer(),
 		Enum.CompressionAlgorithm.Zstd,
@@ -159,7 +163,7 @@ function Serializer:encodeStream(stream)
 	)
 end
 
-function Serializer:encodeStreamToParts(stream)
+function Serializer:encodeStreamToParts(stream: any): { StringValue }
 	const compressedBuffer = EncodingService:CompressBuffer(
 		stream:tobuffer(),
 		Enum.CompressionAlgorithm.Zstd,
@@ -196,7 +200,7 @@ function Serializer:encodeStreamToParts(stream)
 	return out
 end
 
-function Serializer:fetchIdFromCompressionDictionary(target, value)
+function Serializer:fetchIdFromCompressionDictionary(target: string, value: any): number
 	const targetDictionary = self.compressionDictionaries[target]
 	local existingId = targetDictionary.data[value]
 
@@ -214,7 +218,7 @@ function Serializer:fetchIdFromCompressionDictionary(target, value)
 	return existingId
 end
 
-function Serializer:initHierarchy()
+function Serializer:initHierarchy(): ()
 	const hierarchy = ParseHierarchy(
 		self.data,
 		self.save,
@@ -229,7 +233,7 @@ function Serializer:initHierarchy()
 	self.defaults = hierarchy.defaults
 end
 
-function Serializer:tagInstances()
+function Serializer:tagInstances(): ()
 	local id = 1
 	
 	for _, item in self.data.Items do
@@ -245,7 +249,7 @@ end
 
 
 
-function Serializer:Build()
+function Serializer:Build(): StringValue
 	self:buildHierarchyStream()
 	self:buildMarkerBuffer()
 	self:buildDefaults()
@@ -263,7 +267,7 @@ function Serializer:Build()
 end
 
 
-function Serializer:buildDefaults()
+function Serializer:buildDefaults(): ()
 	const stream = Stream.new(nil, 512)
 	
 	local count = 0 
@@ -295,7 +299,7 @@ function Serializer:buildDefaults()
 	self.tree.defaults.Value = self:encodeStream(stream)
 end
 
-function Serializer:buildFrameBuffer()
+function Serializer:buildFrameBuffer(): ()
 	const sequence = {}
 	for id in self.frameBuffer do
 		table.insert(sequence, tonumber(id))
@@ -370,7 +374,7 @@ function Serializer:buildFrameBuffer()
 	self.tree.sequence.Value = self:encodeStream(sequenceStream)
 end
 
-function Serializer:buildHierarchyStream()
+function Serializer:buildHierarchyStream(): ()
 	const stream = Stream.new(nil, 512)
 
 	stream:createMarker("TARGET_COUNT", 2)
@@ -402,7 +406,7 @@ function Serializer:buildHierarchyStream()
 	self.tree.hierarchy.Value = self:encodeStream(stream)
 end
 
-function Serializer:buildCFrameRegistry()
+function Serializer:buildCFrameRegistry(): ()
 	for cframe, id in self.compressionDictionaries.cframes.data do
 		const realCFrame = self.realValues[cframe]
 		const bucketIndex = math.floor(id / 1000)
@@ -417,7 +421,7 @@ function Serializer:buildCFrameRegistry()
 	end
 end
 
-function Serializer:buildDictBuffer()
+function Serializer:buildDictBuffer(): ()
 	const stream = Stream.new()
 	
 	const objectDict = self.compressionDictionaries.objects
@@ -461,7 +465,7 @@ function Serializer:buildDictBuffer()
 	self.tree.dict.Value = self:encodeStream(stream)
 end
 
-function Serializer:serializeMarkerTrack(stream, track)
+function Serializer:serializeMarkerTrack(stream: any, track: any): ()
 	local frameCount = 0
 	
 	stream:createMarker("COUNT", 2)
@@ -515,7 +519,7 @@ function Serializer:serializeMarkerTrack(stream, track)
 	stream:clearMarkers()
 end
 
-function Serializer:buildMarkerBuffer()
+function Serializer:buildMarkerBuffer(): ()
 	const stream = Stream.new(nil, 512)
 	
 	self:serializeMarkerTrack(stream, self.markers.finish)

@@ -1,18 +1,21 @@
 const EncodingService = game:GetService("EncodingService")
 const HttpService = game:GetService("HttpService")
+const LogService = game:GetService("LogService")
 
 const Resolver = require("./Resolver")
 const Stream = require("./Stream")
 const Enums = require("./Enums")
+const Flags = require("../Flags")
 
 const PropertyType = Enums.PropertyType
 
 const MARKER_TYPES = { "finish", "start" } -- do not reorder these
 
-
 const Deserializer = {}
 
-function Deserializer.new(save, flags)
+function Deserializer.new(save: StringValue & {
+	frames: Instance
+}, flags: Flags.Flag)
 	const data = HttpService:JSONDecode(save.Value)
 
 	const overrides = flags.InstanceOverrides or {}
@@ -57,7 +60,7 @@ function Deserializer.new(save, flags)
 	return self 
 end
 
-function Deserializer:overrideInstance(original, new)
+function Deserializer:overrideInstance(original: Instance | string, new: Instance): ()
 	for id, instance in self.targets do
 		if instance == original or instance:GetFullName() == original then
 			self.targetOverrides[id] = new
@@ -65,7 +68,7 @@ function Deserializer:overrideInstance(original, new)
 	end
 end
 
-function Deserializer:decompressBuffer(buf)
+function Deserializer:decompressBuffer(buf: StringValue)
 	const decodedBuffer = EncodingService:Base64Decode(
 		buffer.fromstring(buf.Value)
 	)
@@ -78,7 +81,7 @@ function Deserializer:decompressBuffer(buf)
 	)
 end
 
-function Deserializer:decompressBufferFromParts(holder)
+function Deserializer:decompressBufferFromParts(holder: Instance)
 	const parts = holder:GetChildren()
 
 	const buffers = {}
@@ -113,7 +116,7 @@ function Deserializer:decompressBufferFromParts(holder)
 	)
 end
 
-function Deserializer:deserializeGenericValue(stream, valueType)
+function Deserializer:deserializeGenericValue(stream: any, valueType: number?): any
 	const resolvedType = valueType or stream:readu8()
 
 	if resolvedType == PropertyType.Bool then
@@ -132,12 +135,12 @@ function Deserializer:deserializeGenericValue(stream, valueType)
 		return nil
 	else
 
-		warn("unknown value type", valueType)
+		LogService:Warn("[MoonPlayer/Compiler/Deserializer]: unknown value type {valueType}", {valueType = resolvedType})
 		return nil
 	end
 end
 
-function Deserializer:deserializeValue(stream)
+function Deserializer:deserializeValue(stream: any): (any, number?)
 	const valueType = stream:readu8()
 
 	if valueType == PropertyType.CFrame then
@@ -197,7 +200,7 @@ function Deserializer:deserializeValue(stream)
 end
 
 
-function Deserializer:deserializeDictionaries()
+function Deserializer:deserializeDictionaries(): ()
 	const strings = {}
 	const values = {}
 	const objects = {}
@@ -235,10 +238,9 @@ function Deserializer:deserializeDictionaries()
 			table.insert(path.InstanceTypes, 1, stream:readstring(8))
 		end
 
-		print(path)
 		const inst = self.resolver:resolveInstance(path)
 		if not inst then
-			warn("fail to resolve object", table.concat(path.InstanceNames, "."))
+			LogService:Warn("[MoonPlayer/Compiler/Deserializer]: fail to resolve object {path}", {path = table.concat(path.InstanceNames, ".")})
 			continue
 		end
 		
@@ -251,7 +253,7 @@ function Deserializer:deserializeDictionaries()
 	self.values = values
 end
 
-function Deserializer:deserializeSequence()
+function Deserializer:deserializeSequence(): ()
 	const stream = self:decompressBuffer(self.save.sequence)
 	
 	const sequence = {}
@@ -262,7 +264,7 @@ function Deserializer:deserializeSequence()
 	self.sequence = sequence
 end
 
-function Deserializer:deserializeDefaults()
+function Deserializer:deserializeDefaults(): ()
 	const stream = self:decompressBuffer(self.save.defaults)
 	const defaults = {}
 	
@@ -283,7 +285,7 @@ function Deserializer:deserializeDefaults()
 	self.defaults = defaults
 end
 
-function Deserializer:deserializeMarkers()
+function Deserializer:deserializeMarkers(): ()
 	const stream = self:decompressBuffer(self.save.markers)
 
 	const markers = {}
@@ -329,19 +331,19 @@ function Deserializer:deserializeMarkers()
 	self.markers = markers
 end
 
-function Deserializer:throwResolverError(path, identifier)
+function Deserializer:throwResolverError(path: string, identifier: string): ()
 	if self.playerFlags.StrictMode then
-		error(`failed to resolve "{path}"`)
-	end 
+		LogService:Error('[MoonPlayer/Compiler/Deserializer]: failed to resolve "{path}"', {path = path})
+	end
 
 	if self.playerFlags.LogUnresolvedInstances then
-		warn(`failed to resolve "{path}"`)
-	end 
+		LogService:Warn('[MoonPlayer/Compiler/Deserializer]: failed to resolve "{path}"', {path = path})
+	end
 
 	table.insert(self.unresolvedInstances, identifier)
 end 
 
-function Deserializer:deserializeHierarchy()
+function Deserializer:deserializeHierarchy(): ()
 	const stream = self:decompressBuffer(self.save.hierarchy)
 	
 	const targets = {}

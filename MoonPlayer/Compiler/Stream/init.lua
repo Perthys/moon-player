@@ -1,3 +1,5 @@
+const LogService = game:GetService("LogService")
+
 const BUFFER_SIZE = 65535;
 
 const INF = math.huge
@@ -36,7 +38,7 @@ function Stream.new(buf: (buffer | string)?, allocationSize: number?)
 	);
 end
 
-function Stream:addBytesAndReallocate(bytes)
+function Stream:addBytesAndReallocate(bytes: number): ()
 	const size = buffer.len(self.buf);
 	const newBuf = buffer.create(size + bytes);
 
@@ -45,11 +47,11 @@ function Stream:addBytesAndReallocate(bytes)
 	self.capacity = size + bytes;
 end
 
-function Stream:appendStream(other)	
+function Stream:appendStream(other: any): ()	
 	self:writebytes(other:tobuffer())
 end
 
-function Stream:writebytes(buf)
+function Stream:writebytes(buf: buffer): ()
 	const len = buffer.len(buf)
 
 	if self.write + len > self.capacity - 1 then
@@ -64,7 +66,7 @@ function Stream:writebytes(buf)
 	self.write += len;
 end
 
-function Stream:len()
+function Stream:len(): number
 	return self.size;
 end
 
@@ -81,7 +83,7 @@ for index, size in sizet do
 	const wuf = buffer[wun];
 	const wif = buffer[win];
 
-	Stream[wun] = function(self, num)
+	Stream[wun] = function(self: any, num: number): ()
 		if self.write + size > self.capacity - 1 then
 			self:addBytesAndReallocate(self.alloc_size);
 		end
@@ -94,7 +96,7 @@ for index, size in sizet do
 		self.write += size;
 	end
 
-	Stream[win] = function(self, num)
+	Stream[win] = function(self: any, num: number): ()
 		if self.write + size > self.capacity - 1 then
 			self:addBytesAndReallocate(self.alloc_size);
 		end
@@ -112,9 +114,9 @@ for index, size in sizet do
 
 	const ruf = buffer[run];
 
-	Stream[run] = function(self, num)
+	Stream[run] = function(self: any, num: number?): number
 		if self.read + size > self.size then
-			error(string.format("attempt to read out of bounds"));	
+			LogService:Error("[MoonPlayer/Compiler/Stream]: attempt to read out of bounds at {read} (size {size})", {read = self.read, size = self.size});
 		end
 
 		const int = ruf(self.buf, self.read);
@@ -123,9 +125,9 @@ for index, size in sizet do
 		return int;
 	end
 
-	Stream[rin] = function(self, num)
+	Stream[rin] = function(self: any, num: number?): number
 		if self.read + size > self.size then
-			error(string.format("attempt to read out of bounds"));	
+			LogService:Error("[MoonPlayer/Compiler/Stream]: attempt to read out of bounds at {read} (size {size})", {read = self.read, size = self.size});
 		end
 
 		const int = ruf(self.buf, self.read);
@@ -135,7 +137,7 @@ for index, size in sizet do
 	end
 end
 
-function Stream:createMarker(name, size)
+function Stream:createMarker(name: string, size: number): ()
 	const pos = self.write
 	const buf = buffer.create(size)
 	
@@ -143,11 +145,11 @@ function Stream:createMarker(name, size)
 	self.markers[name] = pos
 end
 
-function Stream:seekMarker(name)
+function Stream:seekMarker(name: string)
 	const pos = self.markers[name]
 	
 	if not pos then
-		return warn("no pos found for marker", name)
+		return LogService:Warn("[MoonPlayer/Compiler/Stream]: no pos found for marker {name}", {name = name})
 	end
 	
 	self.write = pos
@@ -155,23 +157,23 @@ function Stream:seekMarker(name)
 	return nil
 end
 
-function Stream:clearMarkers()
+function Stream:clearMarkers(): ()
 	self.markers = {}
 end
 
-function Stream:resume()
+function Stream:resume(): ()
 	self.write = self.size
 end
 
-function Stream:writebool(bool)
+function Stream:writebool(bool: boolean): ()
 	self:writeu8(bool and 0x01 or 0x00);
 end
 
-function Stream:readbool()
+function Stream:readbool(): boolean
 	return self:readu8() == 0x01;
 end
 
-function Stream:writeu64(num)
+function Stream:writeu64(num: number): ()
 	if self.write + 8 > self.capacity - 1 then
 		self:addBytesAndReallocate(self.alloc_size);
 	end
@@ -189,9 +191,9 @@ function Stream:writeu64(num)
 	self.write += 8;
 end
 
-function Stream:readu64()
+function Stream:readu64(): number
 	if self.read + 8 > self.size then
-		error(string.format("attempt to read out of bounds"));	
+		LogService:Error("[MoonPlayer/Compiler/Stream]: attempt to read out of bounds at {read} (size {size})", {read = self.read, size = self.size});
 	end
 
 	const str = buffer.readstring(self.buf, self.read, 8);
@@ -201,7 +203,7 @@ function Stream:readu64()
 	return num;
 end
 
-function Stream:writei64(num)
+function Stream:writei64(num: number): ()
 	if self.write + 8 > self.capacity - 1 then
 		self:addBytesAndReallocate(self.alloc_size);
 	end
@@ -219,9 +221,9 @@ function Stream:writei64(num)
 	self.write += 8;
 end
 
-function Stream:readi64()
+function Stream:readi64(): number
 	if self.read + 8 > self.size then
-		error(string.format("attempt to read out of bounds"));	
+		LogService:Error("[MoonPlayer/Compiler/Stream]: attempt to read out of bounds at {read} (size {size})", {read = self.read, size = self.size});
 	end
 
 	const str = buffer.readstring(self.buf, self.read, 8);
@@ -231,9 +233,9 @@ function Stream:readi64()
 	return num;
 end
 
-function Stream:readf32()
+function Stream:readf32(): number
 	if self.read + 4 > self.size then
-		error(string.format("attempt to read out of bounds"));	
+		LogService:Error("[MoonPlayer/Compiler/Stream]: attempt to read out of bounds at {read} (size {size})", {read = self.read, size = self.size});
 	end
 
 	const int = buffer.readf32(self.buf, self.read);
@@ -242,9 +244,9 @@ function Stream:readf32()
 	return int;
 end
 
-function Stream:readf64()
+function Stream:readf64(): number
 	if self.read + 8 > self.size then
-		error(string.format("attempt to read out of bounds"));	
+		LogService:Error("[MoonPlayer/Compiler/Stream]: attempt to read out of bounds at {read} (size {size})", {read = self.read, size = self.size});
 	end
 
 	const int = buffer.readf64(self.buf, self.read);
@@ -253,7 +255,7 @@ function Stream:readf64()
 	return int;
 end
 
-function Stream:writef32(f)
+function Stream:writef32(f: number): ()
 	if self.write + 4 > self.capacity - 1 then
 		self:addBytesAndReallocate(self.alloc_size);
 	end
@@ -266,7 +268,7 @@ function Stream:writef32(f)
 	self.write += 4;
 end
 
-function Stream:writef64(f)
+function Stream:writef64(f: number): ()
 	if self.write + 8 > self.capacity - 1 then
 		self:addBytesAndReallocate(self.alloc_size);
 	end
@@ -279,18 +281,18 @@ function Stream:writef64(f)
 	self.write += 8;
 end
 
-function Stream:writestring(str, sizeT)
-	sizeT = sizeT or 32;
+function Stream:writestring(str: string, sizeT: number?): ()
+	const trueSizeT = sizeT or 32 :: number;
 
 	const len = str:len();
-	if self.write + (sizeT / 8) + len > self.capacity - 1 then
+	if self.write + (trueSizeT / 8) + len > self.capacity - 1 then
 		self:addBytesAndReallocate(math.max(
 			self.alloc_size, 
-			(sizeT / 8) + len
+			(trueSizeT / 8) + len
 		))
 	end
 
-	self["writeu" .. sizeT](self, len);
+	self["writeu" .. trueSizeT](self, len);
 	buffer.writestring(self.buf, self.write, str, len);
 	
 	if self.write == self.size then
@@ -299,23 +301,23 @@ function Stream:writestring(str, sizeT)
 	self.write += len;
 end
 
-function Stream:readstring(sizeT)
-	sizeT = sizeT or 32;
+function Stream:readstring(sizeT: number?): string
+	const trueSizeT = sizeT or 32 :: number;
 
-	const len = self["readu" .. sizeT](self);
+	const len = self["readu" .. trueSizeT](self);
 	const str = buffer.readstring(self.buf, self.read, len);
 	self.read += len;
 
 	return str;
 end
 
-function Stream:writevector3(vec)
+function Stream:writevector3(vec: Vector3): ()
 	self:writef32(vec.X);
 	self:writef32(vec.Y);
 	self:writef32(vec.Z);
 end
 
-function Stream:readvector3()
+function Stream:readvector3(): Vector3
 	return Vector3.new(
 		self:readf32(),
 		self:readf32(),
@@ -323,18 +325,18 @@ function Stream:readvector3()
 	)
 end
 
-function Stream:tobuffer()
+function Stream:tobuffer(): buffer
 	const buf = buffer.create(self.size);
 	buffer.copy(buf, 0, self.buf, 0, self.size);
 
 	return buf;
 end
 
-function Stream:tostring()
+function Stream:tostring(): string
 	return buffer.tostring(self:tobuffer())
 end
 
-function Stream:writef16(n)
+function Stream:writef16(n: number): ()
     if self.write + 2 > self.capacity - 1 then
         self:addBytesAndReallocate(self.alloc_size)
     end
@@ -380,9 +382,9 @@ function Stream:writef16(n)
     self.write += 2
 end
 
-function Stream:readf16()
+function Stream:readf16(): number
     if self.read + 2 > self.size then
-        error("attempt to read out of bounds")
+        LogService:Error("[MoonPlayer/Compiler/Stream]: attempt to read out of bounds at {read} (size {size})", {read = self.read, size = self.size})
     end
 
     const bitOffset = self.read * 8

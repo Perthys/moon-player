@@ -9,15 +9,15 @@ export type Flag = typeof(setmetatable(
 
 const FlagBase = {}
 
-function FlagBase.CreateCallFlag(key, default)
+function FlagBase.CreateCallFlag(key: string, default: any)
     const self = {
 		[key] = default
 	}
 	
-	return function(value)
+	return function(value: any)
 		self[key] = value
 		return setmetatable(self, {
-            __add = function(flags, newFlag)
+            __add = function(flags: { [string]: any }, newFlag: { [string]: any }): { [string]: any }
                 for key, value in newFlag do
                     flags[key] = value
                 end
@@ -28,11 +28,11 @@ function FlagBase.CreateCallFlag(key, default)
 	end
 end
 
-function FlagBase.CreateOptionFlag(key, default, options)
+function FlagBase.CreateOptionFlag(key: string, default: any, options: { [string]: any })
     return setmetatable({
         [key] = default
     }, { 
-        __index = function(self, idx)
+        __index = function(self: any, idx: string)
             const opt = options[idx]
             if not opt then
                 return self
@@ -61,9 +61,9 @@ function FlagBase.CreateOptionFlag(key, default, options)
     })
 end
 
-function FlagBase.BuildFlags(flags, default)
+function FlagBase.BuildFlags(flags: { [string]: any }, default: { [string]: any })
     return setmetatable({}, { 
-        __index = function(self, key) 
+        __index = function(self: any, key: string)
             const existingFlag = flags[key]
             if typeof(existingFlag) == "function" then
                 return existingFlag
@@ -80,7 +80,7 @@ function FlagBase.BuildFlags(flags, default)
                     __call = call,
                     __index = index,
 
-                    __add = function(flags, newFlag)
+                    __add = function(flags: { [string]: any }, newFlag: { [string]: any }): { [string]: any }
                         for key, value in newFlag do
                             flags[key] = value
                         end

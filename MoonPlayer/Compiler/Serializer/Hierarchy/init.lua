@@ -1,3 +1,5 @@
+const LogService = game:GetService("LogService")
+
 const StaticProps = require("../../StaticProps")
 const EQ = require("@self/EQ")
 
@@ -9,28 +11,28 @@ const CONSTANT_INTERPS = {
 }
 
 const VALUE_HANDLERS = {
-	EnumType = function(inst, baseValue)
+	EnumType = function(inst: any, baseValue: any): any
 		return Enum[inst.Value][baseValue]
 	end,
 
-	Vector2 = function(inst, baseValue)
+	Vector2 = function(inst: Instance, baseValue: any): Vector2
 		return Vector2.new(baseValue.X, baseValue.Y)
 	end,
 
-	ColorSequence = function(inst, baseValue)
+	ColorSequence = function(inst: Instance, baseValue: any): ColorSequence
 		return ColorSequence.new(baseValue)
 	end,
 
-	NumberSequence = function(inst, baseValue)
+	NumberSequence = function(inst: Instance, baseValue: any): NumberSequence
 		return NumberSequence.new(baseValue)
 	end,
 
-	NumberRange = function(inst, baseValue)
+	NumberRange = function(inst: Instance, baseValue: any): NumberRange
 		return NumberRange.new(baseValue)
 	end
 }
 
-const function readValue(value)
+const function readValue(value: any): any
 	if not value:IsA("ValueBase") then
 		return value:GetAttribute("Value")
 	end
@@ -47,7 +49,7 @@ const function readValue(value)
 	return baseValue
 end
 
-const function optimizeKeyframes(frames, isStatic)
+const function optimizeKeyframes(frames: {any}, isStatic: any?): { any }
 	const optimized = {}
 
 	local idx = 1
@@ -83,7 +85,7 @@ const function optimizeKeyframes(frames, isStatic)
 	return optimized
 end
 
-const function parseKeyframes(keyframesInst, instance, disableOptimization)
+const function parseKeyframes(keyframesInst: Instance, instance: Instance, disableOptimization: boolean): { any }
 	const packs = keyframesInst:QueryDescendants(">Folder")
 
 	const packInstances = {}
@@ -167,7 +169,7 @@ const function parseKeyframes(keyframesInst, instance, disableOptimization)
 		end 
 	end
 	
-	table.sort(keyframes, function(a, b)
+	table.sort(keyframes, function(a: any, b: any): boolean
 		return a.pack + a.idx < b.pack + b.idx
 	end)
 
@@ -227,7 +229,7 @@ const function parseKeyframes(keyframesInst, instance, disableOptimization)
 	return optimizeKeyframes(frames)
 end
 
-const function insertMarker(markers, frame, identifier, name, kfMarkers)
+const function insertMarker(markers: any, frame: number, identifier: number, name: string, kfMarkers: any): ()
 	local markerData = markers[frame]
 	if not markerData then
 		markerData = {}
@@ -243,7 +245,7 @@ const function insertMarker(markers, frame, identifier, name, kfMarkers)
 	end
 end
 
-const function parseKFMarkers(track)
+const function parseKFMarkers(track: Instance): { [string]: string }
 	const kf = track:FindFirstChild("KFMarkers")
 	const markers = {}
 	
@@ -259,7 +261,7 @@ const function parseKFMarkers(track)
 	return markers
 end
 
-const function offsetValueByDefault(value, propName, default, realInstance, relativeOffset)
+const function offsetValueByDefault(value: any, propName: string, default: any, realInstance: Instance, relativeOffset: boolean): any
 	if relativeOffset == false then
 		return value
 	end
@@ -273,7 +275,7 @@ const function offsetValueByDefault(value, propName, default, realInstance, rela
 	return value
 end
 
-const function ParseHierarchy(data, save, disableOptimization, relativeOffset, resolver)
+const function ParseHierarchy(data: any, save: StringValue, disableOptimization: boolean, relativeOffset: boolean, resolver: any)
 	const frameBuffer = {}
 	const defaults = {}
 	const tree = {}
@@ -296,7 +298,7 @@ const function ParseHierarchy(data, save, disableOptimization, relativeOffset, r
 
 		const realInstance = resolver:resolveInstance(item.Path)
 		if not realInstance then
-			return error("failed to resolve: " .. table.concat(item.Path.InstanceNames, "."))
+			return LogService:Error("[MoonPlayer/Compiler/Serializer/Hierarchy]: failed to resolve {path}", {path = table.concat(item.Path.InstanceNames, ".")})
 		end
 
 		if rig and item.Path.ItemType == "Rig" then
@@ -323,7 +325,7 @@ const function ParseHierarchy(data, save, disableOptimization, relativeOffset, r
 				if keyframes then
 					const hierJoint = jointsHier[hier]
 					if not hierJoint then
-						return error(`failed to resolve: {hier}`)
+						return LogService:Error("[MoonPlayer/Compiler/Serializer/Hierarchy]: failed to resolve {hier}", {hier = hier})
 					end
 
 					const isMotor6D = hierJoint:IsA("Motor6D")

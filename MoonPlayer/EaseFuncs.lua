@@ -35,7 +35,7 @@ const EaseFuncs = {} :: {
 -- Linear
 -------------------------------------------------------------------------------------------------------------------------
 
-function EaseFuncs.Linear(t, b, c, d)
+function EaseFuncs.Linear(t: number, b: number, c: number, d: number): number
 	return c * t / d + b
 end
 
@@ -43,7 +43,7 @@ end
 -- Constant
 -------------------------------------------------------------------------------------------------------------------------
 
-function EaseFuncs.Constant(t, b, c, d)
+function EaseFuncs.Constant(t: number, b: number, c: number, d: number): number
 	return t == d and 1 or 0
 end
 
@@ -51,19 +51,19 @@ end
 -- Sine
 -------------------------------------------------------------------------------------------------------------------------
 
-function EaseFuncs.InSine(t, b, c, d)
+function EaseFuncs.InSine(t: number, b: number, c: number, d: number): number
 	return -c * math.cos(t / d * (math.pi / 2)) + c + b
 end
 
-function EaseFuncs.OutSine(t, b, c, d)
+function EaseFuncs.OutSine(t: number, b: number, c: number, d: number): number
 	return c * math.sin(t / d * (math.pi / 2)) + b
 end
 
-function EaseFuncs.InOutSine(t, b, c, d)
+function EaseFuncs.InOutSine(t: number, b: number, c: number, d: number): number
 	return -c / 2 * (math.cos(math.pi * t / d) - 1) + b
 end
 
-function EaseFuncs.OutInSine(t, b, c, d)
+function EaseFuncs.OutInSine(t: number, b: number, c: number, d: number): number
 	if t < d / 2 then
 		return EaseFuncs.OutSine(t * 2, b, c / 2, d)
 	else
@@ -75,17 +75,17 @@ end
 -- Quad
 -------------------------------------------------------------------------------------------------------------------------
 
-function EaseFuncs.InQuad(t, b, c, d)
+function EaseFuncs.InQuad(t: number, b: number, c: number, d: number): number
 	t = t / d
 	return c * math.pow(t, 2) + b
 end
 
-function EaseFuncs.OutQuad(t, b, c, d)
+function EaseFuncs.OutQuad(t: number, b: number, c: number, d: number): number
 	t = t / d
 	return -c * t * (t - 2) + b
 end
 
-function EaseFuncs.InOutQuad(t, b, c, d)
+function EaseFuncs.InOutQuad(t: number, b: number, c: number, d: number): number
 	t = t / d * 2
 
 	if t < 1 then
@@ -95,7 +95,7 @@ function EaseFuncs.InOutQuad(t, b, c, d)
 	end
 end
 
-function EaseFuncs.OutInQuad(t, b, c, d)
+function EaseFuncs.OutInQuad(t: number, b: number, c: number, d: number): number
 	if t < d / 2 then
 		return EaseFuncs.OutQuad(t * 2, b, c / 2, d)
 	else
@@ -107,17 +107,17 @@ end
 -- Cubic
 -------------------------------------------------------------------------------------------------------------------------
 
-function EaseFuncs.InCubic(t, b, c, d)
+function EaseFuncs.InCubic(t: number, b: number, c: number, d: number): number
 	t = t / d
 	return c * math.pow(t, 3) + b
 end
 
-function EaseFuncs.OutCubic(t, b, c, d)
+function EaseFuncs.OutCubic(t: number, b: number, c: number, d: number): number
 	t = t / d - 1
 	return c * (math.pow(t, 3) + 1) + b
 end
 
-function EaseFuncs.InOutCubic(t, b, c, d)
+function EaseFuncs.InOutCubic(t: number, b: number, c: number, d: number): number
 	t = t / d * 2
 
 	if t < 1 then
@@ -128,7 +128,7 @@ function EaseFuncs.InOutCubic(t, b, c, d)
 	end
 end
 
-function EaseFuncs.OutInCubic(t, b, c, d)
+function EaseFuncs.OutInCubic(t: number, b: number, c: number, d: number): number
 	if t < d / 2 then
 		return EaseFuncs.OutCubic(t * 2, b, c / 2, d)
 	else
@@ -140,17 +140,17 @@ end
 -- Quart
 -------------------------------------------------------------------------------------------------------------------------
 
-function EaseFuncs.InQuart(t, b, c, d)
+function EaseFuncs.InQuart(t: number, b: number, c: number, d: number): number
 	t = t / d
 	return c * math.pow(t, 4) + b
 end
 
-function EaseFuncs.OutQuart(t, b, c, d)
+function EaseFuncs.OutQuart(t: number, b: number, c: number, d: number): number
 	t = t / d - 1
 	return -c * (math.pow(t, 4) - 1) + b
 end
 
-function EaseFuncs.InOutQuart(t, b, c, d)
+function EaseFuncs.InOutQuart(t: number, b: number, c: number, d: number): number
 	t = t / d * 2
 
 	if t < 1 then
@@ -161,7 +161,7 @@ function EaseFuncs.InOutQuart(t, b, c, d)
 	end
 end
 
-function EaseFuncs.OutInQuart(t, b, c, d)
+function EaseFuncs.OutInQuart(t: number, b: number, c: number, d: number): number
 	if t < d / 2 then
 		return EaseFuncs.OutQuart(t * 2, b, c / 2, d)
 	else
@@ -173,17 +173,17 @@ end
 -- Quint
 -------------------------------------------------------------------------------------------------------------------------
 
-function EaseFuncs.InQuint(t, b, c, d)
+function EaseFuncs.InQuint(t: number, b: number, c: number, d: number): number
 	t = t / d
 	return c * math.pow(t, 5) + b
 end
 
-function EaseFuncs.OutQuint(t, b, c, d)
+function EaseFuncs.OutQuint(t: number, b: number, c: number, d: number): number
 	t = t / d - 1
 	return c * (math.pow(t, 5) + 1) + b
 end
 
-function EaseFuncs.InOutQuint(t, b, c, d)
+function EaseFuncs.InOutQuint(t: number, b: number, c: number, d: number): number
 	t = t / d * 2
 
 	if t < 1 then
@@ -194,7 +194,7 @@ function EaseFuncs.InOutQuint(t, b, c, d)
 	end
 end
 
-function EaseFuncs.OutInQuint(t, b, c, d)
+function EaseFuncs.OutInQuint(t: number, b: number, c: number, d: number): number
 	if t < d / 2 then
 		return EaseFuncs.OutQuint(t * 2, b, c / 2, d)
 	else
@@ -206,17 +206,17 @@ end
 -- Sextic
 -------------------------------------------------------------------------------------------------------------------------
 
-function EaseFuncs.InSextic(t, b, c, d)
+function EaseFuncs.InSextic(t: number, b: number, c: number, d: number): number
 	t = t / d
 	return c * math.pow(t, 6) + b
 end
 
-function EaseFuncs.OutSextic(t, b, c, d)
+function EaseFuncs.OutSextic(t: number, b: number, c: number, d: number): number
 	t = t / d - 1
 	return -c * (math.pow(t, 6) - 1) + b
 end
 
-function EaseFuncs.InOutSextic(t, b, c, d)
+function EaseFuncs.InOutSextic(t: number, b: number, c: number, d: number): number
 	t = t / d * 2
 
 	if t < 1 then
@@ -227,7 +227,7 @@ function EaseFuncs.InOutSextic(t, b, c, d)
 	end
 end
 
-function EaseFuncs.OutInSextic(t, b, c, d)
+function EaseFuncs.OutInSextic(t: number, b: number, c: number, d: number): number
 	if t < d / 2 then
 		return EaseFuncs.OutSextic(t * 2, b, c / 2, d)
 	else
@@ -239,7 +239,7 @@ end
 -- Expo
 -------------------------------------------------------------------------------------------------------------------------
 
-function EaseFuncs.InExpo(t, b, c, d)
+function EaseFuncs.InExpo(t: number, b: number, c: number, d: number): number
 	if t == 0 then
 		return b
 	else
@@ -247,7 +247,7 @@ function EaseFuncs.InExpo(t, b, c, d)
 	end
 end
 
-function EaseFuncs.OutExpo(t, b, c, d)
+function EaseFuncs.OutExpo(t: number, b: number, c: number, d: number): number
 	if t == d then
 		return b + c
 	else
@@ -255,7 +255,7 @@ function EaseFuncs.OutExpo(t, b, c, d)
 	end
 end
 
-function EaseFuncs.InOutExpo(t, b, c, d)
+function EaseFuncs.InOutExpo(t: number, b: number, c: number, d: number): number
 	if t == 0 then
 		return b
 	end
@@ -274,7 +274,7 @@ function EaseFuncs.InOutExpo(t, b, c, d)
 	end
 end
 
-function EaseFuncs.OutInExpo(t, b, c, d)
+function EaseFuncs.OutInExpo(t: number, b: number, c: number, d: number): number
 	if t < d / 2 then
 		return EaseFuncs.OutExpo(t * 2, b, c / 2, d)
 	else
@@ -286,17 +286,17 @@ end
 -- Circ
 -------------------------------------------------------------------------------------------------------------------------
 
-function EaseFuncs.InCirc(t, b, c, d)
+function EaseFuncs.InCirc(t: number, b: number, c: number, d: number): number
 	t = t / d
 	return (-c * (math.sqrt(1 - math.pow(t, 2)) - 1) + b)
 end
 
-function EaseFuncs.OutCirc(t, b, c, d)
+function EaseFuncs.OutCirc(t: number, b: number, c: number, d: number): number
 	t = t / d - 1
 	return (c * math.sqrt(1 - math.pow(t, 2)) + b)
 end
 
-function EaseFuncs.InOutCirc(t, b, c, d)
+function EaseFuncs.InOutCirc(t: number, b: number, c: number, d: number): number
 	t = t / d * 2
 
 	if t < 1 then
@@ -307,7 +307,7 @@ function EaseFuncs.InOutCirc(t, b, c, d)
 	end
 end
 
-function EaseFuncs.OutInCirc(t, b, c, d)
+function EaseFuncs.OutInCirc(t: number, b: number, c: number, d: number): number
 	if t < d / 2 then
 		return EaseFuncs.OutCirc(t * 2, b, c / 2, d)
 	else
@@ -319,7 +319,7 @@ end
 -- Back
 -------------------------------------------------------------------------------------------------------------------------
 
-function EaseFuncs.InBack(t, b, c, d, s)
+function EaseFuncs.InBack(t: number, b: number, c: number, d: number, s: number): number
 	if not s then
 		s = 1.70158
 	end
@@ -328,7 +328,7 @@ function EaseFuncs.InBack(t, b, c, d, s)
 	return c * t * t * ((s + 1) * t - s) + b
 end
 
-function EaseFuncs.OutBack(t, b, c, d, s)
+function EaseFuncs.OutBack(t: number, b: number, c: number, d: number, s: number): number
 	if not s then
 		s = 1.70158
 	end
@@ -337,7 +337,7 @@ function EaseFuncs.OutBack(t, b, c, d, s)
 	return c * (t * t * ((s + 1) * t + s) + 1) + b
 end
 
-function EaseFuncs.InOutBack(t, b, c, d, s)
+function EaseFuncs.InOutBack(t: number, b: number, c: number, d: number, s: number): number
 	if not s then
 		s = 1.70158
 	end
@@ -353,7 +353,7 @@ function EaseFuncs.InOutBack(t, b, c, d, s)
 	end
 end
 
-function EaseFuncs.OutInBack(t, b, c, d, s)
+function EaseFuncs.OutInBack(t: number, b: number, c: number, d: number, s: number): number
 	if t < d / 2 then
 		return EaseFuncs.OutBack(t * 2, b, c / 2, d, s)
 	else
@@ -365,7 +365,7 @@ end
 -- Bounce
 -------------------------------------------------------------------------------------------------------------------------
 
-function EaseFuncs.OutBounce(t, b, c, d)
+function EaseFuncs.OutBounce(t: number, b: number, c: number, d: number): number
 	t = t / d
 
 	if t < 1 / 2.75 then
@@ -382,11 +382,11 @@ function EaseFuncs.OutBounce(t, b, c, d)
 	end
 end
 
-function EaseFuncs.InBounce(t, b, c, d)
+function EaseFuncs.InBounce(t: number, b: number, c: number, d: number): number
 	return c - EaseFuncs.OutBounce(d - t, 0, c, d) + b
 end
 
-function EaseFuncs.InOutBounce(t, b, c, d)
+function EaseFuncs.InOutBounce(t: number, b: number, c: number, d: number): number
 	if t < d / 2 then
 		return EaseFuncs.InBounce(t * 2, 0, c, d) * 0.5 + b
 	else
@@ -394,7 +394,7 @@ function EaseFuncs.InOutBounce(t, b, c, d)
 	end
 end
 
-function EaseFuncs.OutInBounce(t, b, c, d)
+function EaseFuncs.OutInBounce(t: number, b: number, c: number, d: number): number
 	if t < d / 2 then
 		return EaseFuncs.OutBounce(t * 2, b, c / 2, d)
 	else
@@ -406,7 +406,7 @@ end
 -- Elastic
 -------------------------------------------------------------------------------------------------------------------------
 
-function EaseFuncs.ElasticBlend(t, c, d, a, s, f)
+function EaseFuncs.ElasticBlend(t: number, c: number, d: number, a: number, s: number, f: number): number
 	if c ~= 0 then
 		const t_ = math.abs(s)
 
@@ -425,7 +425,7 @@ function EaseFuncs.ElasticBlend(t, c, d, a, s, f)
 	return f
 end
 
-function EaseFuncs.InElastic(t, b, c, d, a, p)
+function EaseFuncs.InElastic(t: number, b: number, c: number, d: number, a: number, p: number): number
 	local s
 	local f = 1
 
@@ -456,7 +456,7 @@ function EaseFuncs.InElastic(t, b, c, d, a, p)
 	return (-f * (a * math.pow(2, 10 * t) * math.sin((t * d - s) * (2 * math.pi) / p))) + b
 end
 
-function EaseFuncs.OutElastic(t, b, c, d, a, p)
+function EaseFuncs.OutElastic(t: number, b: number, c: number, d: number, a: number, p: number): number
 	local s
 	local f = 1
 
@@ -487,7 +487,7 @@ function EaseFuncs.OutElastic(t, b, c, d, a, p)
 	return (f * (a * math.pow(2, 10 * t) * math.sin((t * d - s) * (2 * math.pi) / p))) + c + b
 end
 
-function EaseFuncs.InOutElastic(t, b, c, d, a, p)
+function EaseFuncs.InOutElastic(t: number, b: number, c: number, d: number, a: number, p: number): number
 	local s
 	local f = 1
 
@@ -525,7 +525,7 @@ function EaseFuncs.InOutElastic(t, b, c, d, a, p)
 	end
 end
 
-function EaseFuncs.OutInElastic(t, b, c, d, a, p)
+function EaseFuncs.OutInElastic(t: number, b: number, c: number, d: number, a: number, p: number): number
 	if t < d / 2 then
 		return EaseFuncs.OutElastic(t * 2, b, c / 2, d, a, p)
 	else
@@ -572,7 +572,7 @@ local function get(maybeInfo: MoonEaseInfo?): (value: number) -> number
 				arg1 = params.Overshoot or 1.70158
 			end
 
-			FUNC_CACHE[hashKey] = function(value)
+			FUNC_CACHE[hashKey] = function(value: number)
 				return impl(value, 0, 1, 1, arg1, arg2)
 			end
 		else

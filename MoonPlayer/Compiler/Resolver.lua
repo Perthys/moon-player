@@ -6,11 +6,11 @@ local __index do
 	end)
 end
 
-const function mergePath(path, start, finish)
+const function mergePath(path: { InstanceNames: { string }, InstanceTypes: { string } }, start: number, finish: number): string
 	return table.concat(path.InstanceNames, ".", start, finish)
 end
 
-const function fastResolvePath(path, root)
+const function fastResolvePath(path: { InstanceNames: { string }, InstanceTypes: { string } }, root: Instance): Instance?
 	const tbl = {}
 
 	for i = 2, #path.InstanceNames do
@@ -26,7 +26,7 @@ end
 
 const Resolver = {}
 
-function Resolver.new(overrides, excluded)
+function Resolver.new(overrides: { [string]: Instance }, excluded: { string })
 	const self = {
 		cache = {},
 		internalCache = {},
@@ -43,7 +43,7 @@ function Resolver.new(overrides, excluded)
 	})
 end
 
-function Resolver:resolveJoints(hier)
+function Resolver:resolveJoints(hier: Instance): { [string]: Instance }
 	const joints = {}
 
 	for _, inst in hier:QueryDescendants("Motor6D") do
@@ -94,7 +94,7 @@ function Resolver:resolveJoints(hier)
 	end
 
 	const hiers = {}
-	local function recurse(name, joint, path)
+	local function recurse(name: string, joint: any, path: string): ()
 		for childName, childJoint in joint.children do
 			const newPath = path .. "." .. childName
 			hiers[newPath] = childJoint.inst
@@ -112,7 +112,7 @@ function Resolver:resolveJoints(hier)
 	return hiers
 end 
 
-function Resolver:resolveInstance(path, root)
+function Resolver:resolveInstance(path: { InstanceNames: { string }, InstanceTypes: { string } }, root: Instance?): Instance?
 	root = root or game
 
 	if tostring(path.InstanceNames[1]):lower() == "game" then
@@ -177,7 +177,7 @@ function Resolver:resolveInstance(path, root)
 	end
 
 	if not outputInst then
-		local success, data = pcall(fastResolvePath, path, root)
+		local success, data = pcall(fastResolvePath, path, root :: Instance)
 
 		if success and typeof(data) == "Instance" then
 			outputInst = data

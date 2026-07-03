@@ -1,9 +1,10 @@
-const Stream = require("./Stream")
+const LogService = game:GetService("LogService")
 
+const Stream = require("./Stream")
 
 const Reader = {}
 
-function Reader.new(deserializer)
+function Reader.new(deserializer: any)
 	const frameBuffer = Stream.new(
 		deserializer.frameBuffer:tobuffer()
 	)
@@ -27,7 +28,7 @@ function Reader:processNextFrame()
 	
 	if nextFrame ~= self.currentFrame then
 		stream.read -= 2 
-		warn("expected frame", self.currentFrame, "got", nextFrame)
+		LogService:Warn("[MoonPlayer/Compiler/SequentialReader]: expected frame {expected}, got {got}", {expected = self.currentFrame, got = nextFrame})
 		
 		return
 	end
@@ -59,9 +60,9 @@ function Reader:processNextFrame()
 					const params = {}
 					for _ = 1, stream:readu8() do
 						const key = assert(self.deserializer.strings[stream:readu16()])
-						const value = self.deserializer:deserializeValue(stream) 
-						
-						params[key] = value
+						const paramValue = self.deserializer:deserializeValue(stream)
+
+						params[key] = paramValue
 					end
 					
 					prop.ease = {

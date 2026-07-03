@@ -12,7 +12,7 @@ const Flags = {
             CFramePosSizeT = 4, 
         },
 
-        Bytes = function(posT, rotT)
+        Bytes = function(posT: string, rotT: string): { [string]: any }
             return { 
                 CFrameSerializeMethod = "Bytes", 
                 CFramePosSizeT = (tonumber(posT:sub(2)) or 32) / 8,
