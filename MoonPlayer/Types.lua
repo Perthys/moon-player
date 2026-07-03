@@ -2,8 +2,8 @@ const Flags = require("./Flags")
 
 export type Serializer = {
 	new: (
-		MoonSave: StringValue, 
-		Flags: Flags.SerializerFlags?
+		MoonSave: StringValue,
+		Flags: Flags.Flag?
 	) -> Serializer,
 	
 	Build: (Serializer) -> StringValue,
@@ -17,8 +17,8 @@ export type Compiler = {
 
 export type AnimationPlayer = {
 	new: (
-		MoonSave: StringValue, 
-		Flags: Flags.PlayerFlags
+		MoonSave: StringValue,
+		Flags: Flags.Flag?
 	) -> AnimationPlayer,
 	
 	Play: (AnimationPlayer) -> (),
@@ -52,8 +52,9 @@ export type AnimationPlayer = {
 }
 
 export type MoonPlayer = {
-	Compiler: Compiler,	
-	Player: AnimationPlayer
+	Compiler: Compiler,
+	Player: AnimationPlayer,
+	Flags: Flags.Flags
 }
 
 return {}

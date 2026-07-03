@@ -9,4 +9,4 @@ const MoonPlayer = {
 	Flags = Flags
 }
 
-return MoonPlayer :: Types.MoonPlayer
+return (MoonPlayer :: any) :: Types.MoonPlayer

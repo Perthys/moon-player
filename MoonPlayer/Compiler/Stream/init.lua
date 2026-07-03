@@ -14,18 +14,18 @@ const Stream = {
     readCFrame = CF.read
 };
 
-function Stream.new(buf: buffer | string, allocationSize: number?)
+function Stream.new(buf: (buffer | string)?, allocationSize: number?)
 	if typeof(buf) == "string" then
 		buf = buffer.fromstring(buf);
 	end
 
-	const len = buf and buffer.len(buf) or 0;
-	const buf = buf or buffer.create(allocationSize or BUFFER_SIZE);
+	const len = buf and buffer.len(buf :: buffer) or 0;
+	buf = buf or buffer.create(allocationSize or BUFFER_SIZE);
 
 	return setmetatable(
 		{
 			buf = buf,
-			capacity = buffer.len(buf),
+			capacity = buffer.len(buf :: buffer),
 			read = 0,
 			write = 0,
 			size = len,
@@ -111,7 +111,6 @@ for index, size in sizet do
 	const rin = "read" .. i;
 
 	const ruf = buffer[run];
-	const rif = buffer[rin];
 
 	Stream[run] = function(self, num)
 		if self.read + size > self.size then
@@ -152,6 +151,8 @@ function Stream:seekMarker(name)
 	end
 	
 	self.write = pos
+
+	return nil
 end
 
 function Stream:clearMarkers()

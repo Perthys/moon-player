@@ -1,4 +1,3 @@
-const Resolver = require("../Resolver")
 const StaticProps = require("../../StaticProps")
 const EQ = require("@self/EQ")
 
@@ -251,9 +250,9 @@ const function parseKFMarkers(track)
 	if kf then
 		for _, val in kf:QueryDescendants("StringValue > StringValue#Val") do
 			const name = val.Parent.Value
-			const val = val.Value 
-			
-			markers[name] = val
+			const value = val.Value
+
+			markers[name] = value
 		end
 	end
 
@@ -322,13 +321,13 @@ const function ParseHierarchy(data, save, disableOptimization, relativeOffset, r
 				end
 				
 				if keyframes then
-					const joint = jointsHier[hier]
-					if not joint then
+					const hierJoint = jointsHier[hier]
+					if not hierJoint then
 						return error(`failed to resolve: {hier}`)
 					end
-					
-					const isMotor6D = joint:IsA("Motor6D")
-					for _, keyframe in parseKeyframes(keyframes, joint, disableOptimization) do
+
+					const isMotor6D = hierJoint:IsA("Motor6D")
+					for _, keyframe in parseKeyframes(keyframes, hierJoint, disableOptimization) do
 						local value = keyframe.value
 						local frameData = frameBuffer[tostring(keyframe.startTime)]
 						

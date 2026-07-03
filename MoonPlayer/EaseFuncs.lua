@@ -3,6 +3,30 @@
 
 --!strict
 
+export type MoonEaseDir = "In" | "Out" | "InOut" | "OutIn"
+
+export type MoonEaseType =
+	"Linear"
+	| "Constant"
+	| "Sine"
+	| "Quad"
+	| "Cubic"
+	| "Quart"
+	| "Quint"
+	| "Sextic"
+	| "Expo"
+	| "Circ"
+	| "Back"
+	| "Bounce"
+	| "Elastic"
+
+export type MoonEaseInfo = {
+	Type: MoonEaseType,
+	Params: { [string]: any },
+}
+
+type EaseFunc = (...number) -> number
+
 const EaseFuncs = {} :: {
 	[string]: EaseFunc,
 }

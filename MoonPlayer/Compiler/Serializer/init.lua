@@ -306,14 +306,14 @@ function Serializer:buildFrameBuffer()
 	const stream = Stream.new()
 	for _, id in sequence do
 		const frame = self.frameBuffer[tostring(id)]
-		const id = assert(tonumber(id))
+		const frameId = assert(tonumber(id))
 		local count = 0
-		
+
 		for _ in frame do
 			count += 1
 		end
-		
-		stream:writeu16(id)
+
+		stream:writeu16(frameId)
 		stream:writeu16(count)
 		
 		for instanceId, state in frame do
@@ -338,16 +338,16 @@ function Serializer:buildFrameBuffer()
 						if ease.params then
 							stream:createMarker("PARAM_COUNT", 1)
 							
-							local count = 0
+							local paramCount = 0
 							for name, value in ease.params do
-								count += 1
-								
+								paramCount += 1
+
 								self:writeStringId(stream, name)
 								self:writePropertyValueToStream(stream, value)
 							end
-							
+
 							stream:seekMarker("PARAM_COUNT")
-							stream:writeu8(count)
+							stream:writeu8(paramCount)
 							stream:resume()
 						end
 					end

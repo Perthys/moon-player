@@ -114,24 +114,26 @@ function Deserializer:decompressBufferFromParts(holder)
 end
 
 function Deserializer:deserializeGenericValue(stream, valueType)
-	const valueType = valueType or stream:readu8()
+	const resolvedType = valueType or stream:readu8()
 
-	if valueType == PropertyType.Bool then
+	if resolvedType == PropertyType.Bool then
 		return stream:readbool()
-	elseif valueType == PropertyType.Number then
+	elseif resolvedType == PropertyType.Number then
 		return stream:readf64()
-	elseif valueType == PropertyType.Color3 then
+	elseif resolvedType == PropertyType.Color3 then
 		return Color3.new(
 			stream:readf32(),
 			stream:readf32(),
 			stream:readf32()
 		)
-	elseif valueType == PropertyType.Vector3 then
-		return stream:readvector3()	
-	elseif valueType == PropertyType.Nil then
+	elseif resolvedType == PropertyType.Vector3 then
+		return stream:readvector3()
+	elseif resolvedType == PropertyType.Nil then
 		return nil
-	else 
+	else
+
 		warn("unknown value type", valueType)
+		return nil
 	end
 end
 
