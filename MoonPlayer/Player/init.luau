@@ -140,6 +140,18 @@ function Player:GetFrameReachedSignal(frame: number): Signal.Signal<()>
 	return getOrCreateSignal(self, "FrameSignals", tostring(frame))
 end
 
+function Player:OnMarkerReached(name: string, callback: (Instance, boolean, { [string]: string }) -> ()): RBXScriptConnection
+	return self:GetMarkerReachedSignal(name):Connect(callback)
+end
+
+function Player:OnFinished(callback: () -> ()): RBXScriptConnection
+	return self.Finished:Connect(callback)
+end
+
+function Player:OnFrameReached(frame: number, callback: () -> ()): RBXScriptConnection
+	return self:GetFrameReachedSignal(frame):Connect(callback)
+end
+
 function Player:_buildMarkerSequence(): ()
 	const sequence = {}
 

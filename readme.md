@@ -78,6 +78,7 @@ Main methods/signals:
 - `Finished` is a signal fired when the track ends: `player.Finished:Connect(callback)`.
 - `GetMarkerReachedSignal(name)` returns a signal fired with `(targetInstance, isFinishedMarker, kfmarkers)` when the named marker is reached.
 - `GetFrameReachedSignal(frame)` returns a signal fired when the target frame has been reached.
+- `OnFinished(callback)` / `OnMarkerReached(name, callback)` / `OnFrameReached(frame, callback)` are callback shorthands that connect to the corresponding signal and return the `RBXScriptConnection`.
 - `ReplaceInstance(original, new)` remaps `original` (an Instance or dot-path) to `new`, cascading to descendants, joints, and object references. Call before `Play()`.
 
 ## Compiling a Track

@@ -55,7 +55,25 @@ export type AnimationPlayer = {
 	GetMarkerReachedSignal: (
 		AnimationPlayer,
 		MarkerName: string
-	) -> Signal.Signal<Instance, boolean, { [string]: string }>
+	) -> Signal.Signal<Instance, boolean, { [string]: string }>,
+
+	OnFinished: (AnimationPlayer, Callback: () -> ()) -> RBXScriptConnection,
+
+	OnFrameReached: (
+		AnimationPlayer,
+		Frame: number,
+		Callback: () -> ()
+	) -> RBXScriptConnection,
+
+	OnMarkerReached: (
+		AnimationPlayer,
+		MarkerName: string,
+		Callback: (
+			Target: Instance,
+			IsFinished: boolean,
+			KFMarkers: { [string]: string }
+		) -> ()
+	) -> RBXScriptConnection
 }
 
 export type MoonPlayer = {
