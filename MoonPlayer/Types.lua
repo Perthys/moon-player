@@ -1,4 +1,15 @@
 const Flags = require("./Flags")
+const Signal = require("./Signal")
+
+export type MoonSave = StringValue & {
+	frames: StringValue,
+	dict: StringValue,
+	sequence: StringValue,
+	defaults: StringValue,
+	markers: StringValue,
+	hierarchy: StringValue,
+	cframes: Configuration,
+}
 
 export type Serializer = {
 	new: (
@@ -6,7 +17,7 @@ export type Serializer = {
 		Flags: Flags.Flag?
 	) -> Serializer,
 	
-	Build: (Serializer) -> StringValue,
+	Build: (Serializer) -> MoonSave,
 }
 
 export type Compiler = {
@@ -17,13 +28,14 @@ export type Compiler = {
 
 export type AnimationPlayer = {
 	new: (
-		MoonSave: StringValue,
+		MoonSave: MoonSave,
 		Flags: Flags.Flag?
 	) -> AnimationPlayer,
 	
 	Play: (AnimationPlayer) -> (),
 	Stop: (AnimationPlayer) -> (),
 	Resume: (AnimationPlayer) -> (),
+	Destroy: (AnimationPlayer) -> (),
 	SetDuration: (AnimationPlayer, Duration: number) -> (),
 	
 	ReplaceInstance: (
@@ -32,23 +44,17 @@ export type AnimationPlayer = {
 		New: Instance
 	) -> (),
 
-	OnFinished: (AnimationPlayer, Callback: () -> any) -> (),
+	Finished: Signal.Signal<()>,
 
-	OnFrameReached: (
-		AnimationPlayer, 
-		Frame: number, 
-		Callback: () -> any
-	) -> (),
+	GetFrameReachedSignal: (
+		AnimationPlayer,
+		Frame: number
+	) -> Signal.Signal<()>,
 
-	OnMarkerReached: (
-		AnimationPlayer, 
-		MarkerName: string, 
-		Callback: (
-			Target: Instance, 
-			IsFinished: boolean,
-			KFMarkers: { [string]: string }
-		) -> ()
-	) -> ()
+	GetMarkerReachedSignal: (
+		AnimationPlayer,
+		MarkerName: string
+	) -> Signal.Signal<Instance, boolean, { [string]: string }>
 }
 
 export type MoonPlayer = {

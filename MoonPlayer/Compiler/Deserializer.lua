@@ -6,6 +6,7 @@ const Resolver = require("./Resolver")
 const Stream = require("./Stream")
 const Enums = require("./Enums")
 const Flags = require("../Flags")
+const Types = require("../Types")
 
 const PropertyType = Enums.PropertyType
 
@@ -13,9 +14,7 @@ const MARKER_TYPES = { "finish", "start" } -- do not reorder these
 
 const Deserializer = {}
 
-function Deserializer.new(save: StringValue & {
-	frames: Instance
-}, flags: Flags.Flag)
+function Deserializer.new(save: Types.MoonSave, flags: Flags.Flag)
 	const data = HttpService:JSONDecode(save.Value)
 
 	const overrides = flags.InstanceOverrides or {}

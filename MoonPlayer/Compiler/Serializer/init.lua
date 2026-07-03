@@ -7,6 +7,7 @@ const Resolver = require("./Resolver")
 const Stream = require("./Stream")
 const Enums = require("./Enums")
 const Flags = require("../Flags")
+const Types = require("../Types")
 
 const PropertyType = Enums.PropertyType
 const Tree = script.tree
@@ -249,7 +250,7 @@ end
 
 
 
-function Serializer:Build(): StringValue
+function Serializer:Build(): Types.MoonSave
 	self:buildHierarchyStream()
 	self:buildMarkerBuffer()
 	self:buildDefaults()

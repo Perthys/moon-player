@@ -10,6 +10,8 @@ const ApplyProp = require("@self/ApplyProp")
 const EaseFuncs = require("./EaseFuncs")
 const Compiler = require("./Compiler")
 const Flags = require("./Flags")
+const Signal = require("./Signal")
+const Types = require("./Types")
 
 const SequentialReader = Compiler.SequentialReader
 const Deserializer = Compiler.Deserializer
@@ -20,7 +22,7 @@ const IGNORED_DEFAULTS = { "Emit", "CFrame" }
 const Player = {}
 
 
-function Player.new(track: StringValue, flags: Flags.Flag?)
+function Player.new(track: Types.MoonSave, flags: Flags.Flag?)
 	const Data = HttpService:JSONDecode(track.Value)
 	local playerFlags = Flags.Player.Default
 
@@ -47,9 +49,9 @@ function Player.new(track: StringValue, flags: Flags.Flag?)
 		MarkerSequence = {},
 		PartAttachments = {},
 
-		MarkerCallbacks = {},
-		FinishedCallbacks = {},
-		FrameCallbacks = {},
+		Finished = Signal.new(),
+		MarkerSignals = {},
+		FrameSignals = {},
 		ClassNames = {},
 		JointCFrames = {},
 
@@ -68,6 +70,23 @@ end
 
 function Player:Resume(): ()
 	PlayingTracks[self] = true
+end
+
+function Player:Destroy(): ()
+	PlayingTracks[self] = nil
+
+	self.Finished:Destroy()
+
+	for _, signal in self.MarkerSignals do
+		signal:Destroy()
+	end
+
+	for _, signal in self.FrameSignals do
+		signal:Destroy()
+	end
+
+	table.clear(self.MarkerSignals)
+	table.clear(self.FrameSignals)
 end
 
 function Player:Play(): ()
@@ -97,16 +116,27 @@ function Player:ReplaceInstance(original: Instance | string, new: Instance): ()
 end
 
 
-function Player:OnMarkerReached(name: string, callback: (Instance, boolean, { [string]: string }) -> ()): ()
-	self.MarkerCallbacks[name] = callback
+type PlayerImpl = typeof(Player.new(nil :: any, nil :: any))
+type SignalMapName = "MarkerSignals" | "FrameSignals"
+
+const function getOrCreateSignal<T...>(player: PlayerImpl, mapName: SignalMapName, key: string): Signal.Signal<T...>
+	const map = (player :: any)[mapName]
+
+	local signal = map[key]
+	if not signal then
+		signal = Signal.new()
+		map[key] = signal
+	end
+
+	return signal :: Signal.Signal<T...>
 end
 
-function Player:OnFinished(callback: () -> ()): ()
-	self.FinishedCallbacks[callback] = true
+function Player:GetMarkerReachedSignal(name: string): Signal.Signal<Instance, boolean, { [string]: string }>
+	return getOrCreateSignal(self, "MarkerSignals", name)
 end
 
-function Player:OnFrameReached(frame: number, callback: () -> ()): ()
-	self.FrameCallbacks[tostring(frame)] = callback
+function Player:GetFrameReachedSignal(frame: number): Signal.Signal<()>
+	return getOrCreateSignal(self, "FrameSignals", tostring(frame))
 end
 
 function Player:_buildMarkerSequence(): ()
@@ -312,11 +342,10 @@ const function emitMarkers(track: any, frameId: string): ()
 				or instances[instanceId]
 			
 			for marker, kfMarkers in markerList do
-				const callback = track.MarkerCallbacks[marker]
-				
-				if callback then
-					task.spawn(
-						callback,
+				const signal = track.MarkerSignals[marker]
+
+				if signal then
+					signal:Fire(
 						realInstance,
 						markerType == "finish",
 						kfMarkers
@@ -335,10 +364,8 @@ const function update(delta: number): ()
 		delta = math.min(delta, 1 / track.OriginalFrameRate)
 
 		if currentFrame > track.Length then
-			for callback in track.FinishedCallbacks do
-				task.defer(callback)
-			end
-			
+			track.Finished:Fire()
+
 			PlayingTracks[track] = nil
 			continue
 		end
@@ -386,9 +413,9 @@ const function update(delta: number): ()
 			track.FrameAdvance[currentFrameId] = nil
 		end 
 	
-		const frameCallback = track.FrameCallbacks[frameId]
-		if frameCallback then
-			task.defer(frameCallback)
+		const frameSignal = track.FrameSignals[frameId]
+		if frameSignal then
+			frameSignal:Fire()
 		end
 		
 		while true do

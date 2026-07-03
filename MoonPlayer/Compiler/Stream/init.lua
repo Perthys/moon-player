@@ -113,6 +113,7 @@ for index, size in sizet do
 	const rin = "read" .. i;
 
 	const ruf = buffer[run];
+	const rif = buffer[rin];
 
 	Stream[run] = function(self: any, num: number?): number
 		if self.read + size > self.size then
@@ -130,7 +131,7 @@ for index, size in sizet do
 			LogService:Error("[MoonPlayer/Compiler/Stream]: attempt to read out of bounds at {read} (size {size})", {read = self.read, size = self.size});
 		end
 
-		const int = ruf(self.buf, self.read);
+		const int = rif(self.buf, self.read);
 		self.read += size;
 
 		return int;
