@@ -1,4 +1,4 @@
-local Enums = {
+const Enums = {
 	PropertyType = {
 		Bool = 0x00,
 		CFrame = 0x01,

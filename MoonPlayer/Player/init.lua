@@ -1,33 +1,33 @@
-local FRAME_ADVANCE_HZ = Enum.StepFrequency.Hz15
+const FRAME_ADVANCE_HZ = Enum.StepFrequency.Hz15
 
 
-local HttpService = game:GetService("HttpService")
-local RunService = game:GetService("RunService")
+const HttpService = game:GetService("HttpService")
+const RunService = game:GetService("RunService")
 
-local Interpolator = require("./Interpolator")
-local ApplyProp = require("@self/ApplyProp")
-local EaseFuncs = require("./EaseFuncs")
-local Compiler = require("./Compiler")
-local Flags = require("./Flags")
+const Interpolator = require("./Interpolator")
+const ApplyProp = require("@self/ApplyProp")
+const EaseFuncs = require("./EaseFuncs")
+const Compiler = require("./Compiler")
+const Flags = require("./Flags")
 
-local SequentialReader = Compiler.SequentialReader
-local Deserializer = Compiler.Deserializer
+const SequentialReader = Compiler.SequentialReader
+const Deserializer = Compiler.Deserializer
 
-local PlayingTracks = {}
-local IGNORED_DEFAULTS = { "Emit", "CFrame" }
+const PlayingTracks = {}
+const IGNORED_DEFAULTS = { "Emit", "CFrame" }
 
-local Player = {}
+const Player = {}
 
 
 function Player.new(track, flags)
-	local Data = HttpService:JSONDecode(track.Value)
+	const Data = HttpService:JSONDecode(track.Value)
 	local playerFlags = Flags.Player.Default
 
 	if flags then
 		playerFlags += flags
 	end
 
-	local self = setmetatable({
+	const self = setmetatable({
 		Data = Data,
 		Deserializer = Deserializer.new(track, playerFlags),
 		Reader = nil,
@@ -80,9 +80,9 @@ function Player:Play()
 end
 
 function Player:SetDuration(duration)
-    local originalFrameRate = self.OriginalFrameRate
-    local originalLength = self.Data.Information.Length
-    local originalDuration = originalLength / originalFrameRate
+    const originalFrameRate = self.OriginalFrameRate
+    const originalLength = self.Data.Information.Length
+    const originalDuration = originalLength / originalFrameRate
 
     self.FrameRate = originalFrameRate * (originalDuration / duration)
 	self.Flags.FrameAdvance = math.max(
@@ -109,7 +109,7 @@ function Player:OnFrameReached(frame, callback)
 end
 
 function Player:_buildMarkerSequence()
-	local sequence = {}
+	const sequence = {}
 
 	for frameId in self.Deserializer.markers do
 		table.insert(sequence, tonumber(frameId))
@@ -134,11 +134,11 @@ function Player:_restore()
 	self.CurrentFrame = -1
 	self.TimePosition = 0
 	
-	local instanceOverride = self.Deserializer.targetOverrides
-	local instances = self.Deserializer.targets
+	const instanceOverride = self.Deserializer.targetOverrides
+	const instances = self.Deserializer.targets
 	
 	for instanceId, props in self.Deserializer.defaults do
-		local realInstance = instanceOverride[instanceId] 
+		const realInstance = instanceOverride[instanceId] 
 			or instances[instanceId]
 		
 		if not realInstance then
@@ -168,10 +168,10 @@ function Player:_restore()
 end
 
 function Player:_setClassNames()
-	local classNames = {}
+	const classNames = {}
 
-	local instanceOverride = self.Deserializer.targetOverrides
-	local instances = self.Deserializer.targets
+	const instanceOverride = self.Deserializer.targetOverrides
+	const instances = self.Deserializer.targets
 
 	for id, instance in instances do
 		classNames[id] = instance.ClassName
@@ -185,7 +185,7 @@ function Player:_setClassNames()
 end
 
 function Player:_handleBaseFlags()
-	local flags = self.Flags 
+	const flags = self.Flags 
 
 	if flags.Duration ~= -1 then
 		self:SetDuration(flags.Duration)
@@ -193,20 +193,20 @@ function Player:_handleBaseFlags()
 end
 
 function Player:_checkApplyPropTransformer(instanceId, name, value)
-	local serializerFlags = self.Data.Information.Flags
+	const serializerFlags = self.Data.Information.Flags
 	if serializerFlags and serializerFlags.RelativeCFrameOffset == false then
 		return value
 	end
 
 	if name == "CFrame" then
-		local cframe = self.JointCFrames[instanceId]
+		const cframe = self.JointCFrames[instanceId]
 		if not cframe then
 			return value
 		end 
 
 		return cframe * value
 	elseif name == "Position" then
-		local cframe = self.JointCFrames[instanceId]
+		const cframe = self.JointCFrames[instanceId]
 		if not cframe then
 			return value
 		end 
@@ -218,14 +218,14 @@ function Player:_checkApplyPropTransformer(instanceId, name, value)
 end
 
 function Player:_advance()
-	local state = self.FrameState
-	local advance = self.FrameAdvance 
-	local reader = self.Reader
+	const state = self.FrameState
+	const advance = self.FrameAdvance 
+	const reader = self.Reader
 	
 	while self.CurrentAdvance ~= self.CurrentFrame + self.Flags.FrameAdvance do
-		local currentFrame = self.CurrentAdvance
+		const currentFrame = self.CurrentAdvance
 
-		local newPoints = reader:requestFrame()
+		const newPoints = reader:requestFrame()
 		if newPoints then
 			for inst, props in newPoints do
 				if not state[inst] then
@@ -234,7 +234,7 @@ function Player:_advance()
 
 				for _, propData in props do
 					for _, prop in propData.props do
-						local entry = {
+						const entry = {
 							duration = propData.duration,
 							prop = prop
 						}
@@ -249,31 +249,31 @@ function Player:_advance()
 			end	
 		end
 
-		local frameBuffer = {}
+		const frameBuffer = {}
 		
 		for instanceId, props in state do 
 			if table.find(self.Deserializer.unresolvedInstances, instanceId) then
 				continue
 			end 
 			
-			local instanceEntry = {}
+			const instanceEntry = {}
 
 			for name, valueData in props do
-				local prop = valueData.prop
-				local ease = prop.ease 
-				local value = self:_checkApplyPropTransformer(instanceId, name, prop.value)
+				const prop = valueData.prop
+				const ease = prop.ease 
+				const value = self:_checkApplyPropTransformer(instanceId, name, prop.value)
 
 				if ease then
-					local easeFunc = EaseFuncs.Get({
+					const easeFunc = EaseFuncs.Get({
 						Type = ease.type,
 						Params = ease.params
 					})
 
-					local progress = (valueData.originalDuration - valueData.duration)
-					local delta = easeFunc(progress / valueData.originalDuration)
-					local target = self:_checkApplyPropTransformer(instanceId, name, ease.target)
+					const progress = (valueData.originalDuration - valueData.duration)
+					const delta = easeFunc(progress / valueData.originalDuration)
+					const target = self:_checkApplyPropTransformer(instanceId, name, ease.target)
 
-					local interpolate = Interpolator.get(target)
+					const interpolate = Interpolator.get(target)
 
 					instanceEntry[name] = interpolate(value, target, delta)
 				else 
@@ -294,22 +294,22 @@ function Player:_advance()
 	end
 end
 
-local function emitMarkers(track, frameId)
-	local markers = track.Deserializer.markers[frameId]
+const function emitMarkers(track, frameId)
+	const markers = track.Deserializer.markers[frameId]
 	if not markers then
 		return 
 	end
 
-	local instanceOverride = track.Deserializer.targetOverrides
-	local instances = track.Deserializer.targets
+	const instanceOverride = track.Deserializer.targetOverrides
+	const instances = track.Deserializer.targets
 
 	for markerType, markers in markers do
 		for instanceId, markerList in markers do
-			local realInstance = instanceOverride[instanceId] 
+			const realInstance = instanceOverride[instanceId] 
 				or instances[instanceId]
 			
 			for marker, kfMarkers in markerList do
-				local callback = track.MarkerCallbacks[marker]
+				const callback = track.MarkerCallbacks[marker]
 				
 				if callback then
 					task.spawn(
@@ -324,10 +324,10 @@ local function emitMarkers(track, frameId)
 	end
 end
 
-local function update(delta)
+const function update(delta)
 	for track in PlayingTracks do
-		local currentFrame = math.floor(track.TimePosition * track.FrameRate)
-		local lastFrame = track.CurrentFrame
+		const currentFrame = math.floor(track.TimePosition * track.FrameRate)
+		const lastFrame = track.CurrentFrame
 
 		delta = math.min(delta, 1 / track.OriginalFrameRate)
 
@@ -345,25 +345,25 @@ local function update(delta)
 			continue
 		end
 
-		local frameId = tostring(currentFrame)
-		local instanceOverride = track.Deserializer.targetOverrides
-		local classNames = track.ClassNames
-		local instances = track.Deserializer.targets
+		const frameId = tostring(currentFrame)
+		const instanceOverride = track.Deserializer.targetOverrides
+		const classNames = track.ClassNames
+		const instances = track.Deserializer.targets
 		
 		for frameNum = lastFrame + 1, currentFrame do
-			local currentFrameId = tostring(frameNum)
-			local frame = track.FrameAdvance[currentFrameId]
+			const currentFrameId = tostring(frameNum)
+			const frame = track.FrameAdvance[currentFrameId]
 
 			if not frame then
 				continue
 			end
 
 			for instanceId, props in frame do
-				local realInstance = instanceOverride[instanceId] 
+				const realInstance = instanceOverride[instanceId] 
 					or instances[instanceId]
 
 				if realInstance then
-					local className = classNames[instanceId]
+					const className = classNames[instanceId]
 
 					for name, value in props do
 						ApplyProp(
@@ -383,13 +383,13 @@ local function update(delta)
 			track.FrameAdvance[currentFrameId] = nil
 		end 
 	
-		local frameCallback = track.FrameCallbacks[frameId]
+		const frameCallback = track.FrameCallbacks[frameId]
 		if frameCallback then
 			task.defer(frameCallback)
 		end
 		
 		while true do
-			local marker = track.MarkerSequence[1]
+			const marker = track.MarkerSequence[1]
 
 			if typeof(marker) ~= "number" or currentFrame < marker then
 				break
@@ -404,7 +404,7 @@ local function update(delta)
 	end
 end
 
-local function updateAttachments()
+const function updateAttachments()
 	for track in PlayingTracks do
 		for inst, attach in track.PartAttachments do
 			inst.CFrame = attach.CFrame
@@ -412,7 +412,7 @@ local function updateAttachments()
 	end
 end 
 
-local function framePregen(delta)
+const function framePregen(delta)
 	for track in PlayingTracks do
 		if track.CurrentAdvance == track.CurrentFrame + track.Flags.FrameAdvance then
 			continue

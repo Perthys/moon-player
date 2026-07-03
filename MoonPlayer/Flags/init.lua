@@ -1,4 +1,4 @@
-local FlagBase = require("@self/FlagBase")
+const FlagBase = require("@self/FlagBase")
 
 export type Flag = FlagBase.Flag
 

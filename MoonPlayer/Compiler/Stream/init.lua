@@ -1,15 +1,15 @@
-local BUFFER_SIZE = 65535;
+const BUFFER_SIZE = 65535;
 
-local INF = math.huge
-local LOG2 = math.log(2)
-local DENORM_SCALE = 5.960464477539063e-08
+const INF = math.huge
+const LOG2 = math.log(2)
+const DENORM_SCALE = 5.960464477539063e-08
 
-local floor = math.floor
-local log = math.log
+const floor = math.floor
+const log = math.log
 
-local CF = require("@self/CFrame")
+const CF = require("@self/CFrame")
 
-local Stream = {
+const Stream = {
     writeCFrame = CF.write,
     readCFrame = CF.read
 };
@@ -19,8 +19,8 @@ function Stream.new(buf: buffer | string, allocationSize: number?)
 		buf = buffer.fromstring(buf);
 	end
 
-	local len = buf and buffer.len(buf) or 0;
-	local buf = buf or buffer.create(allocationSize or BUFFER_SIZE);
+	const len = buf and buffer.len(buf) or 0;
+	const buf = buf or buffer.create(allocationSize or BUFFER_SIZE);
 
 	return setmetatable(
 		{
@@ -37,8 +37,8 @@ function Stream.new(buf: buffer | string, allocationSize: number?)
 end
 
 function Stream:addBytesAndReallocate(bytes)
-	local size = buffer.len(self.buf);
-	local newBuf = buffer.create(size + bytes);
+	const size = buffer.len(self.buf);
+	const newBuf = buffer.create(size + bytes);
 
 	buffer.copy(newBuf, 0, self.buf, 0, size);
 	self.buf = newBuf;
@@ -50,7 +50,7 @@ function Stream:appendStream(other)
 end
 
 function Stream:writebytes(buf)
-	local len = buffer.len(buf)
+	const len = buffer.len(buf)
 
 	if self.write + len > self.capacity - 1 then
 		self:addBytesAndReallocate(len + 1);
@@ -68,18 +68,18 @@ function Stream:len()
 	return self.size;
 end
 
-local sizet = { 1, 2, 4 };
+const sizet = { 1, 2, 4 };
 for index, size in sizet do
-	local bits = size * 8;
+	const bits = size * 8;
 
-	local u = "u" .. bits;
-	local i = "i" .. bits;
+	const u = "u" .. bits;
+	const i = "i" .. bits;
 
-	local wun = "write" .. u;
-	local win = "write" .. i;
+	const wun = "write" .. u;
+	const win = "write" .. i;
 
-	local wuf = buffer[wun];
-	local wif = buffer[win];
+	const wuf = buffer[wun];
+	const wif = buffer[win];
 
 	Stream[wun] = function(self, num)
 		if self.write + size > self.capacity - 1 then
@@ -107,18 +107,18 @@ for index, size in sizet do
 		self.write += size;
 	end
 
-	local run = "read" .. u;
-	local rin = "read" .. i;
+	const run = "read" .. u;
+	const rin = "read" .. i;
 
-	local ruf = buffer[run];
-	local rif = buffer[rin];
+	const ruf = buffer[run];
+	const rif = buffer[rin];
 
 	Stream[run] = function(self, num)
 		if self.read + size > self.size then
 			error(string.format("attempt to read out of bounds"));	
 		end
 
-		local int = ruf(self.buf, self.read);
+		const int = ruf(self.buf, self.read);
 		self.read += size;
 
 		return int;
@@ -129,7 +129,7 @@ for index, size in sizet do
 			error(string.format("attempt to read out of bounds"));	
 		end
 
-		local int = ruf(self.buf, self.read);
+		const int = ruf(self.buf, self.read);
 		self.read += size;
 
 		return int;
@@ -137,15 +137,15 @@ for index, size in sizet do
 end
 
 function Stream:createMarker(name, size)
-	local pos = self.write
-	local buf = buffer.create(size)
+	const pos = self.write
+	const buf = buffer.create(size)
 	
 	self:writebytes(buf)
 	self.markers[name] = pos
 end
 
 function Stream:seekMarker(name)
-	local pos = self.markers[name]
+	const pos = self.markers[name]
 	
 	if not pos then
 		return warn("no pos found for marker", name)
@@ -193,10 +193,10 @@ function Stream:readu64()
 		error(string.format("attempt to read out of bounds"));	
 	end
 
-	local str = buffer.readstring(self.buf, self.read, 8);
+	const str = buffer.readstring(self.buf, self.read, 8);
 	self.read += 8;
 
-	local num = string.unpack("<I8", str);
+	const num = string.unpack("<I8", str);
 	return num;
 end
 
@@ -223,10 +223,10 @@ function Stream:readi64()
 		error(string.format("attempt to read out of bounds"));	
 	end
 
-	local str = buffer.readstring(self.buf, self.read, 8);
+	const str = buffer.readstring(self.buf, self.read, 8);
 	self.read += 8;
 
-	local num = string.unpack("<i8", str);
+	const num = string.unpack("<i8", str);
 	return num;
 end
 
@@ -235,7 +235,7 @@ function Stream:readf32()
 		error(string.format("attempt to read out of bounds"));	
 	end
 
-	local int = buffer.readf32(self.buf, self.read);
+	const int = buffer.readf32(self.buf, self.read);
 	self.read += 4;
 
 	return int;
@@ -246,7 +246,7 @@ function Stream:readf64()
 		error(string.format("attempt to read out of bounds"));	
 	end
 
-	local int = buffer.readf64(self.buf, self.read);
+	const int = buffer.readf64(self.buf, self.read);
 	self.read += 8;
 
 	return int;
@@ -281,7 +281,7 @@ end
 function Stream:writestring(str, sizeT)
 	sizeT = sizeT or 32;
 
-	local len = str:len();
+	const len = str:len();
 	if self.write + (sizeT / 8) + len > self.capacity - 1 then
 		self:addBytesAndReallocate(math.max(
 			self.alloc_size, 
@@ -301,8 +301,8 @@ end
 function Stream:readstring(sizeT)
 	sizeT = sizeT or 32;
 
-	local len = self["readu" .. sizeT](self);
-	local str = buffer.readstring(self.buf, self.read, len);
+	const len = self["readu" .. sizeT](self);
+	const str = buffer.readstring(self.buf, self.read, len);
 	self.read += len;
 
 	return str;
@@ -323,7 +323,7 @@ function Stream:readvector3()
 end
 
 function Stream:tobuffer()
-	local buf = buffer.create(self.size);
+	const buf = buffer.create(self.size);
 	buffer.copy(buf, 0, self.buf, 0, self.size);
 
 	return buf;
@@ -338,7 +338,7 @@ function Stream:writef16(n)
         self:addBytesAndReallocate(self.alloc_size)
     end
 
-    local bitOffset = self.write * 8
+    const bitOffset = self.write * 8
 
     local sign = 0
     if n < 0 then
@@ -355,16 +355,16 @@ function Stream:writef16(n)
         bits = bit32.lshift(sign, 15) + bit32.lshift(0x1F, 10) + 1
 
     elseif n < 6.10352e-05 then
-        local mantissa = floor(n / DENORM_SCALE + 0.5)
+        const mantissa = floor(n / DENORM_SCALE + 0.5)
         bits = bit32.lshift(sign, 15) + mantissa
 
     elseif n > 65504 then
         bits = bit32.lshift(sign, 15) + bit32.lshift(0x1F, 10)
 
     else
-        local exponent = floor(log(n) / LOG2)
-        local mantissa = floor((n / (2 ^ exponent) - 1) * 1024 + 0.5)
-        local exponentBits = exponent + 15
+        const exponent = floor(log(n) / LOG2)
+        const mantissa = floor((n / (2 ^ exponent) - 1) * 1024 + 0.5)
+        const exponentBits = exponent + 15
 
         bits = bit32.lshift(sign, 15)
             + bit32.lshift(exponentBits, 10)
@@ -384,15 +384,15 @@ function Stream:readf16()
         error("attempt to read out of bounds")
     end
 
-    local bitOffset = self.read * 8
-    local bits = buffer.readbits(self.buf, bitOffset, 16)
+    const bitOffset = self.read * 8
+    const bits = buffer.readbits(self.buf, bitOffset, 16)
     self.read += 2
 
-    local sign = bit32.rshift(bits, 15) == 1
-    local signMult = sign and -1 or 1
+    const sign = bit32.rshift(bits, 15) == 1
+    const signMult = sign and -1 or 1
 
-    local exponent = bit32.band(bit32.rshift(bits, 10), 0x1F)
-    local mantissa = bit32.band(bits, 0x3FF)
+    const exponent = bit32.band(bit32.rshift(bits, 10), 0x1F)
+    const mantissa = bit32.band(bits, 0x3FF)
 
     if exponent == 0 then
         if mantissa == 0 then

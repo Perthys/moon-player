@@ -1,4 +1,4 @@
-local Flags = require("./Flags")
+const Flags = require("./Flags")
 
 export type Serializer = {
 	new: (

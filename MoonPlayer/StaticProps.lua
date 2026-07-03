@@ -1,4 +1,4 @@
-return {
+const STATIC_PROPS = {
     Camera = {
 		AttachToPart = true,
 		LookAtPart = true,
@@ -30,3 +30,5 @@ return {
 		Stop = true,
 	},
 }
+
+return STATIC_PROPS

@@ -1,9 +1,9 @@
-local Compiler = require("@self/Compiler")
-local Player = require("@self/Player")
-local Types = require("@self/Types")
-local Flags = require("@self/Flags")
+const Compiler = require("@self/Compiler")
+const Player = require("@self/Player")
+const Types = require("@self/Types")
+const Flags = require("@self/Flags")
 
-local MoonPlayer = {
+const MoonPlayer = {
 	Compiler = Compiler,
 	Player = Player,
 	Flags = Flags

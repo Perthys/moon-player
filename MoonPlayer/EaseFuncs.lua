@@ -2,11 +2,11 @@
 -- https://github.com/behollister/blender2.8/blob/blender2.8/source/blender/blenlib/Intern/easing.c
 
 --!strict
-local EaseFuncs = {} :: {
+
+const EaseFuncs = {} :: {
 	[string]: EaseFunc,
 }
 
-local Moonlite = script.Parent
 -------------------------------------------------------------------------------------------------------------------------
 -- Linear
 -------------------------------------------------------------------------------------------------------------------------
@@ -384,7 +384,7 @@ end
 
 function EaseFuncs.ElasticBlend(t, c, d, a, s, f)
 	if c ~= 0 then
-		local t_ = math.abs(s)
+		const t_ = math.abs(s)
 
 		if a ~= 0 then
 			f = f * (a / math.abs(c))
@@ -393,7 +393,7 @@ function EaseFuncs.ElasticBlend(t, c, d, a, s, f)
 		end
 
 		if math.abs(t * d) < t_ then
-			local l = math.abs(t * d) / t_
+			const l = math.abs(t * d) / t_
 			f = (f * l) + (1 - l)
 		end
 	end
@@ -513,28 +513,28 @@ end
 -- Module Export
 -------------------------------------------------------------------------------------------------------------------------
 
-local HttpService = game:GetService("HttpService")
+const HttpService = game:GetService("HttpService")
 
-local DEFAULT_INFO: MoonEaseInfo = {
+const DEFAULT_INFO: MoonEaseInfo = {
 	Type = "Linear",
 	Params = {},
 }
 
-local FUNC_CACHE = {} :: {
+const FUNC_CACHE = {} :: {
 	[string]: EaseFunc,
 }
 
 local function get(maybeInfo: MoonEaseInfo?): (value: number) -> number
-	local info: MoonEaseInfo = maybeInfo or DEFAULT_INFO
-	local hashKey = HttpService:JSONEncode(info)
+	const info: MoonEaseInfo = maybeInfo or DEFAULT_INFO
+	const hashKey = HttpService:JSONEncode(info)
 
 	if FUNC_CACHE[hashKey] == nil then
-		local params = info.Params
-		local style: MoonEaseType = info.Type or "Linear"
-		local dir: MoonEaseDir? = params.Direction or "In"
+		const params = info.Params
+		const style: MoonEaseType = info.Type or "Linear"
+		const dir: MoonEaseDir? = params.Direction or "In"
 
 		-- stylua: ignore
-		local impl = EaseFuncs[`{dir}{style}`]
+		const impl = EaseFuncs[`{dir}{style}`]
 			or EaseFuncs[style]
 
 		if impl then

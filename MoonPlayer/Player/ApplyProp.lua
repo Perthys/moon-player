@@ -1,6 +1,6 @@
 local SpecialProps do
-	local ModelInstance = Instance.new("Model")
-	local ParticleEmitterInstance = Instance.new("ParticleEmitter")
+	const ModelInstance = Instance.new("Model")
+	const ParticleEmitterInstance = Instance.new("ParticleEmitter")
 
 	SpecialProps = {
 		Camera = {
@@ -35,9 +35,9 @@ local SpecialProps do
 	}
 end
 
-local function ApplyProp(inst, className, name, value, player)
-	local className = className or inst.ClassName
-	local specialClass = SpecialProps[className]
+const function ApplyProp(inst, className, name, value, player)
+	const className = className or inst.ClassName
+	const specialClass = SpecialProps[className]
 
 	if not specialClass then
 		inst[name] = value
@@ -45,7 +45,7 @@ local function ApplyProp(inst, className, name, value, player)
 	end
 
 	if specialClass.Simple then
-		local simpleHandler = specialClass.Simple[name]
+		const simpleHandler = specialClass.Simple[name]
 
 		if simpleHandler then
 			return simpleHandler(inst, value)
@@ -53,7 +53,7 @@ local function ApplyProp(inst, className, name, value, player)
 	end
 
 	if specialClass.Advanced then
-		local advancedHandler = specialClass.Advanced[name]
+		const advancedHandler = specialClass.Advanced[name]
 
 		if advancedHandler then
 			return advancedHandler(inst, value, player)

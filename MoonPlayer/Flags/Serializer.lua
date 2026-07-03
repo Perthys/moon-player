@@ -1,6 +1,6 @@
-local FlagBase = require("./FlagBase")
+const FlagBase = require("./FlagBase")
 
-local Flags = {
+const Flags = {
     CompressionLevel = FlagBase.CreateCallFlag("CompressionLevel", 7),
     DisableRuntimeLengthEncoding = { RuntimeLengthEncoding = false },
     EnableRelativeCFrameOffset = { RelativeCFrameOffset = true },
@@ -22,7 +22,7 @@ local Flags = {
     }),
 }
 
-local Default = {
+const Default = {
     RuntimeLengthEncoding = true,
     RelativeCFrameOffset = false,
     CompressionLevel = 7,
