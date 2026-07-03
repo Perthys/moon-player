@@ -1,3 +1,4 @@
+--!optimize 2
 const FRAME_ADVANCE_HZ = Enum.StepFrequency.Hz15
 
 

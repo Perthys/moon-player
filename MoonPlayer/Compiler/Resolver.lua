@@ -1,3 +1,4 @@
+--!optimize 2
 local __index do
 	xpcall(function(...)
 		return game.MoonPlayer

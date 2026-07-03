@@ -1,3 +1,4 @@
+--!optimize 2
 const function EQ(a: any, b: any): boolean
     const t = typeof(a)
     

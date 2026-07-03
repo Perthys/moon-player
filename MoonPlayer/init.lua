@@ -1,3 +1,4 @@
+--!optimize 2
 const Compiler = require("@self/Compiler")
 const Player = require("@self/Player")
 const Types = require("@self/Types")

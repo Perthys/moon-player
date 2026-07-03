@@ -1,3 +1,4 @@
+--!optimize 2
 const SQRT2 = math.sqrt(2)
 const MAX15 = 32767
 

@@ -1,3 +1,4 @@
+--!optimize 2
 local SpecialProps do
 	const ModelInstance = Instance.new("Model")
 	const ParticleEmitterInstance = Instance.new("ParticleEmitter")

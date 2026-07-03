@@ -1,3 +1,4 @@
+--!optimize 2
 --!strict
 export type Signal<T...> = {
 	Fire: (self: Signal<T...>, T...) -> (),

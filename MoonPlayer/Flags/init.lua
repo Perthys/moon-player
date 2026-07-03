@@ -1,3 +1,4 @@
+--!optimize 2
 const FlagBase = require("@self/FlagBase")
 
 export type Flag = FlagBase.Flag

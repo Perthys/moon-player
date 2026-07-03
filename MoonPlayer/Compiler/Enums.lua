@@ -1,3 +1,4 @@
+--!optimize 2
 const Enums = {
 	PropertyType = {
 		Bool = 0x00,

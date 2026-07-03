@@ -1,3 +1,4 @@
+--!optimize 2
 -- https://github.com/EmmanuelOga/easing/blob/master/lib/easing.lua
 -- https://github.com/behollister/blender2.8/blob/blender2.8/source/blender/blenlib/Intern/easing.c
 

@@ -1,3 +1,4 @@
+--!optimize 2
 const SequentialReader = require("@self/SequentialReader")
 const Deserializer = require("@self/Deserializer")
 const Serializer = require("@self/Serializer")

@@ -1,3 +1,4 @@
+--!optimize 2
 const Flags = require("./Flags")
 const Signal = require("./Signal")
 

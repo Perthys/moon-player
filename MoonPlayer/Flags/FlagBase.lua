@@ -1,3 +1,4 @@
+--!optimize 2
 export type Flag = typeof(setmetatable(
     {}::{ 
         [string]: any,    

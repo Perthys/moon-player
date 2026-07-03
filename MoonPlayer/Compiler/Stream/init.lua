@@ -1,3 +1,4 @@
+--!optimize 2
 const LogService = game:GetService("LogService")
 
 const BUFFER_SIZE = 65535;

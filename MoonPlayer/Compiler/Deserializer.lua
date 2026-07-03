@@ -1,3 +1,4 @@
+--!optimize 2
 const EncodingService = game:GetService("EncodingService")
 const HttpService = game:GetService("HttpService")
 const LogService = game:GetService("LogService")

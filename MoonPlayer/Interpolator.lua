@@ -1,3 +1,4 @@
+--!optimize 2
 const Interpolator = {}
 
 const CONSTANT_INTERPS = {

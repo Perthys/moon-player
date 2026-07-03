@@ -1,3 +1,4 @@
+--!optimize 2
 const STATIC_PROPS = {
     Camera = {
 		AttachToPart = true,
