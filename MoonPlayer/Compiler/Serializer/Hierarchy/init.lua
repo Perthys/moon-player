@@ -301,7 +301,7 @@ local function ParseHierarchy(data, save, disableOptimization, relativeOffset, r
 		end
 
 		if rig and item.Path.ItemType == "Rig" then
-			local findJoint = resolver:resolveJoints(realInstance)
+			local jointsHier = resolver:resolveJoints(realInstance)
 			
 			local joints = rig:QueryDescendants(">#_joint")
 			local jointData = {}
@@ -322,7 +322,7 @@ local function ParseHierarchy(data, save, disableOptimization, relativeOffset, r
 				end
 				
 				if keyframes then
-					local joint = findJoint(hier)
+					local joint = jointsHier[hier]
 					if not joint then
 						return error(`failed to resolve: {hier}`)
 					end

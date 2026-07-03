@@ -233,6 +233,7 @@ function Deserializer:deserializeDictionaries()
 			table.insert(path.InstanceTypes, 1, stream:readstring(8))
 		end
 
+		print(path)
 		local inst = self.resolver:resolveInstance(path)
 		if not inst then
 			warn("fail to resolve object", table.concat(path.InstanceNames, "."))
@@ -364,9 +365,9 @@ function Deserializer:deserializeHierarchy()
 
 		local jointCount = stream:readu16()
 		if jointCount > 0 then 
-			local findJoints
+			local joints
 			if root then
-				findJoints = self.resolver:resolveJoints(root)
+				joints = self.resolver:resolveJoints(root)
 			end
 			
 			for _ = 1, jointCount do
@@ -379,7 +380,7 @@ function Deserializer:deserializeHierarchy()
 					continue
 				end
 		
-				local joint = findJoints(hier)
+				local joint = joints[hier]
 				if joint then
 					targets[jointIdentifier] = joint
 				else 

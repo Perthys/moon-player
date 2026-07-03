@@ -60,22 +60,6 @@ function Resolver:resolveJoints(hier)
 		}
 	end
 
-	for name, data in joints do
-		local joint = data.inst
-
-		local part0 = joint.part0
-		if not part0 then
-			continue
-		end 
-
-		local data0 = joints[part0.Name]
-		if not data0 then
-			continue
-		end 
-
-		data0.children[name] = data
-	end
-
 	for _, inst in hier:QueryDescendants("Bone") do
 		joints[inst.Name] = {
 			inst = inst,
@@ -83,18 +67,49 @@ function Resolver:resolveJoints(hier)
 		}
 	end
 
-	return function(hier)
-		local parts = string.split(hier, ".")
+	for name, data in joints do
+		local joint = data.inst
+		local class = joint.ClassName
+		
+		if class == "Motor6D" then
+			local part0 = joint.part0
+			if not part0 then
+				continue
+			end 
 
-		local name = table.remove(parts, 1)
-		local data = rawget(joints, name)
+			local data0 = joints[part0.Name]
+			if not data0 then
+				continue
+			end 
 
-		while data and #parts > 0 do
-			data = data.children[table.remove(parts, 1)]
+			data0.children[name] = data
+		elseif class == "Bone" then
+			local parentBone = joints[joint.Parent.Name]
+			if not parentBone then
+				continue
+			end
+
+			parentBone.children[name] = data
 		end
-
-		return data and data.inst
 	end
+
+	local hiers = {}
+	local function recurse(name, joint, path)
+		for childName, childJoint in joint.children do
+			local newPath = path .. "." .. childName
+			hiers[newPath] = childJoint.inst
+
+			recurse(childName, childJoint, newPath)
+		end
+	end
+
+	for name, data in joints do
+		hiers[name] = data.inst
+		
+		recurse(name, data, name)
+	end
+
+	return hiers
 end 
 
 function Resolver:resolveInstance(path, root)
