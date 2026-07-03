@@ -31,7 +31,7 @@ key is the dot-path of an animated instance and the value is the instance to use
 An override **cascades**: everything underneath the overridden instance — descendant items,
 rig joints, and `ObjectValue` references — is resolved relative to the new instance.
 
-```lua
+```luau
 const Flags = MoonPlayer.Flags.Player
 
 const player = MoonPlayer.Player.new(track, Flags.InstanceOverrides({
@@ -44,7 +44,7 @@ where `original` is an Instance or its dot-path. Call it before `Play()`.
 
 Example:
 
-```lua
+```luau
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 const MoonPlayer = require(ReplicatedStorage.MoonPlayer)
@@ -87,7 +87,7 @@ The compilation process should only be done once in studio before publishing to 
 
 - use `Serializer.new(moonSave, flags?)` + `serializer:build()` to compile a MoonSave
 
-```lua
+```luau
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 const MoonPlayer = require(ReplicatedStorage.Packages.MoonPlayer)
